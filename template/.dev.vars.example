@@ -1,0 +1,2 @@
+# Local development only. Copy to .dev.vars (git-ignored). Never put TEST_AUTH in wrangler.jsonc.
+TEST_AUTH=1

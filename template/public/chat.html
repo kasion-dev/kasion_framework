@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>ข้อความ</title>
+<script src="/app.config.js"></script>
+<script src="/kasion.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+.hs::-webkit-scrollbar{display:none}
+@keyframes kdspin{to{rotate:360deg}}
+@keyframes chDot{0%,60%,100%{translate:0 0;opacity:.45}30%{translate:0 -4px;opacity:1}}
+.ch-dots span{display:inline-block;width:7px;height:7px;border-radius:4px;background:#8A948F;animation:chDot 1.2s infinite ease-in-out}
+.ch-dots span:nth-child(2){animation-delay:.15s}.ch-dots span:nth-child(3){animation-delay:.3s}
+@keyframes chMine{from{opacity:0;translate:0 10px;scale:.96}to{opacity:1;translate:0 0;scale:1;rotate:0deg}}
+.ch-new{animation:chMine .28s var(--kd-ease) both}
+.ch-row:hover{background:#FAFBFA}
+.ch-input:focus{border-color:var(--kd-accent)!important;box-shadow:0 0 0 3px var(--kd-accent-soft)}
+@media (prefers-reduced-motion:reduce){.ch-dots span,.ch-new{animation:none}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: var(--kd-bg); font-family: 'Noto Sans Thai', sans-serif; color: var(--kd-ink); display: flex; flex-direction: column; overflow: hidden; position: relative">
+<sc-if value="{{inList}}">
+<div style="display: flex; align-items: center; gap: 8px; padding: 16px; background: #fff; border-bottom: 1px solid var(--kd-line)">
+<div style="font-size: 19px; font-weight: 800; flex: 1">ข้อความ<sc-if value="{{totalUnread}}"><span class="kd-pop" style="margin-left: 8px; font-size: 12px; color: #fff; background: #E5484D; border-radius: 10px; padding: 1px 8px; vertical-align: 3px">{{totalUnread}}</span></sc-if></div>
+<sc-if value="{{totalUnread}}"><button onClick="{{readAll}}" class="kd-press" style="height: 36px; padding: 0 10px; border-radius: 10px; border: 0; background: none; color: var(--kd-accent-ink); font-weight: 700; font-size: 14px">อ่านทั้งหมด</button></sc-if>
+</div>
+<div style="flex: 1; overflow-y: auto; padding: 12px 16px">
+<sc-if value="{{hasFriendConvs}}"><div style="font-size: 13px; font-weight: 800; color: var(--kd-mute); margin: 4px 2px 8px">การสนทนา</div>
+<div class="kd-card {{listAnim}}" style="overflow: hidden; margin-bottom: 16px">
+<sc-for list="{{friendConvs}}" as="c">
+<div class="ch-row" style="display: flex; align-items: center; border-bottom: {{c.border}}">
+<button onClick="{{c.open}}" class="kd-press" style="flex: 1; min-width: 0; display: flex; gap: 12px; align-items: center; padding: 12px 14px; border: 0; background: none; text-align: left; color: var(--kd-ink)">
+<span style="position: relative; flex-shrink: 0">
+<sc-if value="{{c.hasPhoto}}"><img src="{{c.photo}}" alt="" width="48" height="48" referrerpolicy="no-referrer" style="display: block; width: 48px; height: 48px; border-radius: 24px; object-fit: cover"></sc-if>
+<sc-if value="{{c.noPhoto}}"><span style="width: 48px; height: 48px; border-radius: 24px; background: var(--kd-accent-soft); color: var(--kd-accent-ink); font-weight: 800; display: flex; align-items: center; justify-content: center">{{c.initials}}</span></sc-if>
+<sc-if value="{{c.online}}"><span class="kd-pulse" style="position: absolute; right: 0; bottom: 0; width: 12px; height: 12px; border-radius: 6px; border: 2px solid #fff; background: var(--kd-accent)"></span></sc-if>
+</span>
+<span style="flex: 1; min-width: 0">
+<span style="display: flex; justify-content: space-between; gap: 8px"><span style="font-weight: 800; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.name}}</span><span style="font-size: 12px; color: var(--kd-mute); flex-shrink: 0">{{c.time}}</span></span>
+<span style="display: block; margin-top: 2px; font-size: 13px; color: var(--kd-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.last}}</span>
+</span>
+</button>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{noConvs}}"><div style="display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; padding: 70px 20px">
+<div style="width: 84px; height: 84px; border-radius: 42px; background: var(--kd-accent-soft); display: flex; align-items: center; justify-content: center"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--kd-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></div>
+<div style="font-size: 18px; font-weight: 800">ยังไม่มีข้อความ</div>
+<div style="font-size: 14px; color: var(--kd-mute); line-height: 1.5">เลือกคนจากหน้าแรกเพื่อเริ่มคุย<br>แล้วบทสนทนาจะมาอยู่ที่นี่</div>
+<a href="/" class="kd-press" style="height: 44px; padding: 0 22px; border-radius: 22px; background: var(--kd-accent); color: #fff; font-weight: 800; font-size: 15px; text-decoration: none; display: flex; align-items: center">ไปหน้าแรก</a>
+</div></sc-if>
+</div>
+<nav aria-label="เมนูหลัก" style="display: flex; background: #fff; border-top: 1px solid var(--kd-line); padding: 6px 4px 8px; flex-shrink: 0">
+<sc-for list="{{tabs}}" as="t"><a href="{{t.href}}" aria-current="{{t.current}}" class="kd-press" style="flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; text-decoration: none; color: {{t.color}}; font-size: 11px; font-weight: 700"><svg width="24" height="24" viewBox="0 0 24 24" fill="{{t.fill}}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.icon}}"/></svg>{{t.label}}</a></sc-for>
+</nav>
+</sc-if>
+<sc-if value="{{inThread}}">
+<div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #fff; border-bottom: 1px solid var(--kd-line)">
+<button onClick="{{closeThread}}" aria-label="กลับไปรายการแชท" class="kd-press" style="width: 40px; height: 40px; border-radius: 20px; border: 0; background: var(--kd-bg); color: var(--kd-ink); display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+<span style="position: relative; flex-shrink: 0">
+<sc-if value="{{cur.hasPhoto}}"><img src="{{cur.photo}}" alt="" width="40" height="40" referrerpolicy="no-referrer" style="display: block; width: 40px; height: 40px; border-radius: 20px; object-fit: cover"></sc-if>
+<sc-if value="{{cur.isFriendNoPhoto}}"><span style="width: 40px; height: 40px; border-radius: 20px; background: var(--kd-accent-soft); color: var(--kd-accent-ink); font-weight: 800; font-size: 14px; display: flex; align-items: center; justify-content: center">{{cur.initials}}</span></sc-if>
+<sc-if value="{{cur.isDemo}}"><span style="width: 40px; height: 40px; border-radius: 20px; background: {{cur.bg}}; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{cur.fg}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{cur.icon}}"/></svg></span></sc-if>
+<sc-if value="{{cur.online}}"><span class="kd-pulse" style="position: absolute; right: 0; bottom: 0; width: 11px; height: 11px; border-radius: 6px; border: 2px solid #fff; background: var(--kd-accent)"></span></sc-if>
+</span>
+<div onClick="{{toProfile}}" style="flex: 1; min-width: 0; cursor: pointer"><div style="font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{cur.name}}</div><div style="font-size: 12px; color: {{statusColor}}">{{status}}</div></div>
+<sc-if value="{{cur.isFriend}}"><button onClick="{{vcall}}" aria-label="{{vcallLabel}}" class="kd-press" style="width: 40px; height: 40px; border-radius: 20px; border: 0; background: var(--kd-accent-soft); display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--kd-accent-ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="M15.5 10.5l6-3.5v10l-6-3.5z"/></svg></button></sc-if>
+<button onClick="{{call}}" aria-label="{{callLabel}}" aria-busy="{{callingAria}}" class="kd-press" style="width: 40px; height: 40px; border-radius: 20px; border: 0; background: var(--kd-accent-soft); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<sc-if value="{{calling}}"><span style="width: 18px; height: 18px; border-radius: 9px; border: 2.5px solid var(--kd-accent-soft); border-top-color: var(--kd-accent-ink); animation: kdspin .8s linear infinite"></span></sc-if>
+<sc-if value="{{notCalling}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--kd-accent-ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></sc-if>
+</button>
+</div>
+<div id="kd-thread" aria-live="polite" style="flex: 1; overflow-y: auto; padding: 14px 12px; display: flex; flex-direction: column">
+<sc-if value="{{cur.isFriend}}"><div style="align-self: center; max-width: 280px; text-align: center; font-size: 12px; color: var(--kd-mute); background: #fff; border: 1px solid var(--kd-line); border-radius: 12px; padding: 8px 12px; margin-bottom: 12px">ข้อความเก็บไว้ในระบบ เปิดดูได้ทุกเครื่อง</div></sc-if>
+<sc-if value="{{dayLabel}}"><div style="align-self: center; font-size: 12px; color: var(--kd-mute); background: #E9ECEA; border-radius: 10px; padding: 2px 10px; margin-bottom: 10px">{{dayLabel}}</div></sc-if>
+<sc-for list="{{msgs}}" as="m">
+<div class="{{m.anim}}" style="display: flex; flex-direction: column; align-items: {{m.align}}; margin-top: {{m.gap}}">
+<div style="max-width: 75%; padding: {{m.pad}}; border-radius: {{m.radius}}; background: {{m.bg}}; color: {{m.fg}}; border: {{m.border}}; font-size: 14px; line-height: 1.45; word-break: break-word"><sc-if value="{{m.isImg}}"><img src="{{m.img}}" alt="รูปภาพ" data-preview="1" style="cursor: zoom-in; display: block; max-width: 220px; width: 100%; border-radius: 12px"></sc-if><sc-if value="{{m.isText}}">{{m.text}}</sc-if></div>
+<sc-if value="{{m.showMeta}}"><div style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: #8A948F; margin: 3px 4px 0">{{m.time}}<sc-if value="{{m.single}}"><svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="#8A948F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="{{m.tickLabel}}"><path d="M2 6.5l3 3 7-7.5"/></svg></sc-if><sc-if value="{{m.double}}"><svg width="19" height="12" viewBox="0 0 19 12" fill="none" stroke="{{m.tickColor}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="{{m.tickLabel}}"><path d="M1.5 6.5l3 3 7-7.5"/><path d="M8 9.5l.5.3 7.5-8"/></svg></sc-if></div></sc-if>
+</div>
+</sc-for>
+<sc-if value="{{uploading}}"><div class="ch-new" style="display: flex; justify-content: flex-end; margin-top: 8px"><div style="padding: 9px 12px; border-radius: 18px 18px 6px 18px; background: var(--kd-accent-soft); color: var(--kd-accent-ink); font-size: 13px; display: flex; align-items: center; gap: 8px"><span style="width: 14px; height: 14px; border-radius: 7px; border: 2px solid var(--kd-accent-soft); border-top-color: var(--kd-accent-ink); animation: kdspin .8s linear infinite"></span>กำลังส่งรูป…</div></div></sc-if>
+<sc-if value="{{typing}}"><div style="display: flex; margin-top: 8px"><div class="ch-dots" role="status" aria-label="{{typingLabel}}" style="display: flex; gap: 4px; align-items: center; height: 36px; padding: 0 14px; border-radius: 18px 18px 18px 6px; background: #fff; border: 1px solid var(--kd-line)"><span></span><span></span><span></span></div></div></sc-if>
+</div>
+<div style="background: #fff; border-top: 1px solid var(--kd-line)">
+<div style="display: flex; gap: 8px; padding: 10px 12px 0; overflow-x: auto" class="hs">
+<sc-for list="{{chips}}" as="q"><button onClick="{{q.send}}" class="kd-press" style="flex-shrink: 0; height: 34px; padding: 0 12px; border-radius: 17px; border: 1px solid var(--kd-accent-soft); background: #fff; color: var(--kd-accent-ink); font-size: 13px; font-weight: 700">{{q.text}}</button></sc-for>
+</div>
+<div style="display: flex; gap: 8px; padding: 10px 12px 16px">
+<button onClick="{{attach}}" aria-label="แนบรูปภาพ" class="kd-press" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: var(--kd-accent-soft); display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--kd-accent-ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4M15.5 9.5h.01"/></svg></button>
+<input id="kd-msg" class="ch-input" value="{{draft}}" onInput="{{typeDraft}}" onKeydown="{{key}}" placeholder="พิมพ์ข้อความ..." aria-label="ข้อความ" autocomplete="off" enterkeyhint="send" style="flex: 1; min-width: 0; height: 44px; border-radius: 22px; border: 1px solid #DCE2DE; padding: 0 16px; font-size: 15px; outline: none; background: var(--kd-bg); transition: border-color .2s, box-shadow .2s">
+<button onClick="{{send}}" aria-label="ส่ง" class="kd-press" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: var(--kd-accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg></button>
+</div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+const RANK = { sent: 0, delivered: 1, read: 2 };
+class Component extends DCLogic {
+constructor(p) {
+super(p);
+const w = store.get('chatWith', null);
+if (w) store.set('chatWith', null);
+this.draft = '';
+this.friends = store.get('chat_friends', []);
+this.orderThreads = store.get('chat_orders', []);
+this.remote = {};
+this.newFrom = -1;
+this.listAnimated = false;
+this.state = { open: w, typing: false, uploading: false, calling: false };
+// ?with=f_<uid> | o_<orderId> | support — refresh / Back keep the open conversation.
+this.routeKeys = { open: { name: 'with', push: true } };
+if (w) this.markRead(w);
+}
+// Keep focus + caret in the message box across full re-renders, then pin the thread to the bottom.
+__keep(fn) {
+const a = document.activeElement, id = a && a.id;
+let ss = null, se = null; try { ss = a.selectionStart; se = a.selectionEnd; } catch (e) {}
+fn();
+if (id) { const n = document.getElementById(id); if (n && n !== document.activeElement) { n.focus({ preventScroll: true }); try { if (ss != null) n.setSelectionRange(ss, se); } catch (e) {} } }
+this.scrollDown();
+}
+setState(s) { this.__keep(() => super.setState(s)); }
+forceUpdate() { this.__keep(() => super.forceUpdate()); }
+onRoute(keys) { if (keys.includes('open')) { clearTimeout(this.replyT); this.newFrom = -1; this.draft = ''; this.state.typing = false; this.state.uploading = false; if (this.state.open) { this.markRead(this.state.open); this.poll(); } } }
+componentDidMount() {
+this.scrollDown();
+requireUser().then(async r => { if (!r) return; this.poll(); await this.loadFriends(); const o = this.state.open; if (o && /^m_/.test(o) && !this.friends.some(f => f.uid === o.slice(2))) { try { const d = await api('/api/users'); const p = (d.users || []).find(x => x.uid === o.slice(2)); if (!p) throw new Error('ไม่พบผู้ใช้นี้'); this.extra = { uid: p.uid, name: p.name, email: '', photo: p.photo || '', online: !!p.online, unread: 0 }; this.friends = [this.extra].concat(this.friends); this.forceUpdate(); } catch (e) { toast(e.message || 'ไม่พบผู้ใช้นี้'); this.setState({ open: null }); } } }).catch(() => {});
+// Realtime via chatLive (WebSocket); poll only as a fallback while the socket is down.
+this.pollT = setInterval(() => { if (!chatLive.connected) this.poll(); }, 3000);
+this.listT = setInterval(() => { if (!this.state.open && !chatLive.connected) this.loadThreads(); }, 15000);
+chatLive.askOnTap();
+document.addEventListener('visibilitychange', () => { if (!document.hidden && this.state.open) { this.markRead(this.state.open); this.forceUpdate(); } });
+window.addEventListener('pageshow', e => { if (e.persisted) this.setState({ calling: false }); });
+chatLive.onReconnect(() => { this.poll(); this.loadThreads(); });
+chatLive.on(ev => {
+if (ev.type === 'unread') { this.forceUpdate(); return false; }
+if (ev.type === 'receipt') {
+const list = this.remote['m_' + ev.thread.slice(2)] || [];
+let up = false; list.forEach(m => { if (m.from === 'me' && m.ts <= ev.upTo && (RANK[ev.status] || 0) > (RANK[m.status] || 0)) { m.status = ev.status; up = true; } });
+if (up) this.forceUpdate();
+return true;
+}
+if (!ev.thread) return false;
+const id = 'm_' + ev.thread.slice(2);
+const c = this.findConv(this.state.open);
+if (c && c.id === id && !document.hidden) {
+if (this.merge(c, [ev.message])) { this.forceUpdate(); if (!ev.message.mine) sfx.play('receive', .8); }
+if (!ev.message.mine) api('/api/chat/' + encodeURIComponent(c.thread) + '/read', { method: 'POST' }).catch(() => {});
+return true;
+}
+{ const fr = this.friends.find(x => x.uid === ev.thread.slice(2)); if (fr) { fr.last = ev.message.img && !ev.message.text ? '[รูปภาพ]' : ev.message.text; fr.lastMine = !!ev.message.mine; fr.lastAt = ev.message.at; } else this.loadFriends(); }
+if (this.remote[id]) this.merge(this.findConv(id) || { id }, [ev.message]);
+this.forceUpdate();
+return false;
+});
+}
+async loadThreads() { return this.loadFriends(); }
+hhmm(ts) { return new Date(ts).toTimeString().slice(0, 5); }
+toMsg(x) { return { id: x.id, from: x.mine ? 'me' : 'them', text: x.text || '', img: x.img || '', time: this.hhmm(x.at), ts: x.at, status: x.status || null }; }
+merge(c, list) {
+const cur = this.remote[c.id] || [], have = new Map(cur.map(x => [x.id, x]));
+let up = false;
+(list || []).forEach(x => { const o = have.get(x.id); if (o && x.status && (RANK[x.status] || 0) > (RANK[o.status] || 0)) { o.status = x.status; up = true; } });
+const add = (list || []).filter(x => !have.has(x.id)).map(x => this.toMsg(x));
+if (!add.length && this.remote[c.id]) return up;
+this.newFrom = this.remote[c.id] ? cur.length : -1;
+this.remote[c.id] = cur.concat(add).sort((a, b) => a.ts - b.ts);
+return true;
+}
+// Real threads (friends, orders) live on the server: fetch new messages for the open one every 3s.
+async poll() {
+const c = this.findConv(this.state.open);
+if (!c || !c.thread || this._polling) return;
+this._polling = true;
+try {
+const cur = this.remote[c.id] || [];
+const after = cur.length ? cur[cur.length - 1].ts : 0;
+const r = await api('/api/chat/' + encodeURIComponent(c.thread) + '/messages' + (after ? '?after=' + after : ''));
+chatLive.clear(c.thread);
+if (this.merge(c, r.messages) && this.state.open === c.id) this.forceUpdate();
+this.chatErr = '';
+} catch (e) { if (this.chatErr !== e.message) { this.chatErr = e.message; if (e.status === 403 || e.status === 409 || e.status === 404) toast(e.message); } }
+this._polling = false;
+}
+async sendRemote(c, m) {
+if (this.sending) return;
+this.sending = true;
+try {
+const r = await api('/api/chat/' + encodeURIComponent(c.thread) + '/messages', { method: 'POST', body: m });
+if (r.message) { this.merge(c, [r.message]); sfx.play('send', .8); }
+// only clear the box when what was sent is still what's typed (photos / quick replies keep the draft)
+if (m.text && this.draft.trim() === m.text) { this.draft = ''; const n = document.getElementById('kd-msg'); if (n) n.value = ''; }
+this.forceUpdate();
+} catch (e) { toast('ส่งไม่สำเร็จ: ' + e.message); }
+this.sending = false;
+}
+lastOf(c) {
+const m = this.msgs(c);
+if (m.length) return m[m.length - 1];
+return c.lastText ? { from: 'them', text: c.lastText, time: c.lastAt ? this.hhmm(c.lastAt) : '' } : undefined;
+}
+async loadFriends() {
+try {
+const r = await api('/api/chat/list');
+const list = (r.chats || []).map(f => ({ uid: f.uid, name: f.name || 'ผู้ใช้', email: '', photo: f.photo || '', online: !!f.online, last: f.last, lastMine: f.lastMine, lastAt: f.lastAt, unread: f.unread || 0 }));
+if (this.extra && !list.some(f => f.uid === this.extra.uid)) list.unshift(this.extra);
+store.set('chat_friends', list);
+this.friends = list;
+this.loaded = true;
+this.forceUpdate();
+} catch (e) { this.loaded = true; this.forceUpdate(); }
+}
+convDefs() { return []; }
+friendDefs() {
+return this.friends.map(f => ({ id: 'm_' + f.uid, uid: f.uid, friend: true, name: f.name, email: f.email, photo: f.photo, online: f.online, seed: [], replies: [], chips: ['สวัสดี 👋', 'ขอบคุณครับ/ค่ะ', 'เดี๋ยวติดต่อกลับนะ'], unread: 0, thread: 'm:' + f.uid, lastText: f.last ? (f.lastMine ? 'คุณ: ' : '') + f.last : '', lastAt: f.lastAt }));
+}
+findConv(id) {
+if (!id) return null;
+const d = this.convDefs().find(x => x.id === id) || this.friendDefs().find(x => x.id === id);
+if (d) return d;
+// Opened from /friends before the friend list loaded: placeholder until loadFriends() fills it in.
+if (/^m_/.test(id)) return { id, uid: id.slice(2), thread: 'm:' + id.slice(2), friend: true, name: 'กำลังโหลด…', email: '', photo: '', online: false, seed: [], replies: [], chips: ['สวัสดี 👋', 'ขอบคุณครับ/ค่ะ', 'เดี๋ยวติดต่อกลับนะ'], unread: 0 };
+return null;
+}
+msgs(c) { if (c.thread) return this.remote[c.id] || []; return store.get('chat_' + c.id, c.seed.map(s => ({ from: s[0], text: s[1], time: s[2] }))); }
+markRead(id) { const c = this.findConv(id); if (c && c.thread) { chatLive.clear(c.thread); api('/api/chat/' + encodeURIComponent(c.thread) + '/read', { method: 'POST' }).catch(() => {}); return; } const r = store.get('chat_read', {}); r[id] = true; store.set('chat_read', r); }
+now() { return new Date().toTimeString().slice(0, 5); }
+push(c, m) { const l = this.msgs(c); this.newFrom = l.length; store.set('chat_' + c.id, l.concat([m])); }
+autoReply(c) {
+if (c.friend || !c.replies.length) { this.forceUpdate(); return; }
+clearTimeout(this.replyT);
+this.setState({ typing: true });
+this.replyT = setTimeout(() => {
+const l2 = this.msgs(c);
+const reply = c.replies[l2.filter(m => m.from === 'me').length % c.replies.length];
+this.push(c, { from: 'them', text: reply, time: this.now() });
+if (this.state.open === c.id) this.setState({ typing: false }); else this.state.typing = false;
+}, 1400);
+}
+attach() {
+if (this.state.uploading) return;
+const c = this.findConv(this.state.open);
+if (!c) return;
+this.setState({ uploading: true });
+pickImage('chat/' + c.id).then(r => {
+if (!r || !r.url) { this.setState({ uploading: false }); return; }
+if (c.thread) { this.setState({ uploading: false }); this.sendRemote(c, { img: r.url }); return; }
+this.push(c, { from: 'me', img: r.url, text: '', time: this.now() });
+this.setState({ uploading: false });
+this.autoReply(c);
+}).catch(() => { toast('ส่งรูปไม่สำเร็จ'); this.setState({ uploading: false }); });
+}
+sendText(text) {
+text = (text || '').trim();
+if (!text) { toast('พิมพ์ข้อความก่อนนะ'); return; }
+const c = this.findConv(this.state.open);
+if (!c) return;
+if (c.thread) { this.sendRemote(c, { text }); return; }
+this.push(c, { from: 'me', text, time: this.now() });
+this.draft = '';
+const n = document.getElementById('kd-msg'); if (n) n.value = '';
+this.autoReply(c);
+}
+async startCall(c, video) {
+if (this.state.calling) return;
+const u = await auth.ready().catch(() => null);
+if (!u) { location.href = '/login?next=' + encodeURIComponent('/chat'); return; }
+if (!c.friend) { toast('โทรไม่ได้'); return; }
+this.setState({ calling: true });
+try {
+const r = await api('/api/calls', { method: 'POST', body: { to: c.uid, video: !!video } });
+const call = r.call || {};
+if (!call.id) throw new Error('ไม่ได้รับรหัสสาย');
+store.set('call', { id: call.id, channel: call.channel, name: (call.peer && (call.peer.name || call.peer.email)) || c.name, photo: (call.peer && call.peer.photo) || c.photo || '', back: location.pathname + location.search, outgoing: true, video: !!video });
+location.href = '/call?id=' + encodeURIComponent(call.id);
+} catch (e) {
+this.setState({ calling: false });
+if (e.status === 403 || e.status === 404) { toast(e.message); }
+else toast('โทรไม่สำเร็จ: ' + e.message);
+}
+}
+scrollDown() { const t = document.getElementById('kd-thread'); if (t) t.scrollTop = t.scrollHeight; }
+renderVals() {
+const s = this.state;
+const read = store.get('chat_read', {});
+const lastLine = m => m ? (m.from === 'me' ? 'คุณ: ' : '') + (m.img ? 'ส่งรูปภาพ' : m.text) : 'เริ่มแชทได้เลย';
+const defs = this.convDefs();
+const convs = defs.map((c, i) => { const last = this.lastOf(c); const unread = c.thread ? (chatLive.unread[c.thread] || 0) : (read[c.id] ? 0 : c.unread); return {
+name: c.name, bg: c.bg, fg: c.fg, icon: c.icon, last: lastLine(last), time: last ? last.time : '',
+unread, unreadLabel: 'ยังไม่อ่าน ' + unread + ' ข้อความ', markLabel: 'ทำเครื่องหมายว่าอ่านแล้ว ' + c.name,
+weight: unread ? 800 : 700, lastColor: unread ? '#1A1F1C' : '#5B6660', timeColor: unread ? 'var(--kd-accent-ink)' : '#5B6660',
+border: i === defs.length - 1 ? '0' : '1px solid #ECEFED',
+markRead: () => { this.markRead(c.id); this.forceUpdate(); toast('อ่านแล้ว'); },
+open: () => { this.markRead(c.id); this.draft = ''; this.newFrom = -1; this.setState({ open: c.id, typing: false }); this.poll(); }
+}; });
+const fdefs = this.friendDefs();
+const friendConvs = fdefs.map((c, i) => { const last = this.lastOf(c); return {
+name: c.name, photo: c.photo, hasPhoto: !!c.photo, noPhoto: !c.photo, initials: c.name.slice(0, 2).toUpperCase(), online: c.online,
+last: (chatLive.unread[c.thread] ? '● ใหม่ ' + chatLive.unread[c.thread] + ' · ' : '') + (last ? lastLine(last) : (c.online ? 'ออนไลน์อยู่ · ทักทายหรือโทรหาได้เลย' : c.email)), time: last ? last.time : '',
+border: i === fdefs.length - 1 ? '0' : '1px solid #ECEFED',
+open: () => { chatLive.clear(c.thread); this.draft = ''; this.newFrom = -1; this.setState({ open: c.id, typing: false }); this.poll(); }
+}; });
+const totalUnread = convs.reduce((n, c) => n + c.unread, 0) + fdefs.reduce((n, c) => n + (chatLive.unread[c.thread] || 0), 0);
+let listAnim = '';
+if (!s.open && !this.listAnimated) { listAnim = 'kd-stagger'; this.listAnimated = true; }
+const cur = this.findConv(s.open);
+let msgs = [];
+if (cur) {
+const raw = this.msgs(cur);
+let lastThem = -1; raw.forEach((m, i) => { if (m.from === 'them') lastThem = i; });
+msgs = raw.map((m, i) => {
+const mine = m.from === 'me';
+const prev = raw[i - 1], next = raw[i + 1];
+const first = !prev || prev.from !== m.from, last = !next || next.from !== m.from || next.time !== m.time;
+const big = '18px', small = '6px';
+const radius = mine ? [big, first ? big : small, last ? small : small, big].join(' ') : [first ? big : small, big, big, last ? small : small].join(' ');
+const st = cur.thread ? (m.status || 'sent') : (i < lastThem ? 'read' : 'delivered');
+const isRead = mine && st === 'read';
+return {
+isImg: !!m.img, isText: !m.img, img: m.img || '', text: m.text, time: m.time, mine, read: isRead,
+single: mine && st === 'sent', double: mine && st !== 'sent',
+tickColor: isRead ? '#2FB86A' : '#8A948F', tickLabel: isRead ? 'อ่านแล้ว' : st === 'delivered' ? 'ส่งถึงแล้ว' : 'ส่งแล้ว',
+align: mine ? 'flex-end' : 'flex-start', gap: i === 0 ? '0' : (first ? '12px' : '3px'), showMeta: last,
+pad: m.img ? '4px' : '9px 12px', radius,
+bg: mine ? (m.img ? 'var(--kd-accent-soft)' : 'var(--kd-accent)') : '#fff', fg: mine ? '#fff' : '#1A1F1C', border: mine ? '0' : '1px solid #E3E8E5',
+anim: this.newFrom >= 0 && i >= this.newFrom ? 'ch-new' : ''
+};
+});
+}
+const curV = cur ? Object.assign({}, cur, { isFriend: !!cur.friend, isDemo: !cur.friend, hasPhoto: !!(cur.friend && cur.photo), isFriendNoPhoto: !!(cur.friend && !cur.photo), initials: (cur.name || '').slice(0, 2).toUpperCase(), online: cur.friend ? cur.online : true }) : {};
+const status = s.typing ? 'กำลังพิมพ์…' : (cur && cur.friend ? (cur.online ? 'ออนไลน์' : 'ออฟไลน์') : 'ออนไลน์');
+const out = {
+inList: !cur, inThread: !!cur,
+convs, friendConvs, hasFriendConvs: friendConvs.length > 0, totalUnread, listAnim,
+back: () => { if (history.length > 1) history.back(); else go('/'); },
+dayLabel: (() => { const f = cur && (this.remote[cur.id] || [])[0]; if (!f || !f.ts) return ''; const d = new Date(f.ts), t = new Date(); return d.toDateString() === t.toDateString() ? 'วันนี้' : d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: d.getFullYear() === t.getFullYear() ? undefined : '2-digit' }); })(),
+tabs: tabBar('chat'), noConvs: !!this.loaded && !friendConvs.length,
+toProfile: () => {},
+readAll: () => { fdefs.forEach(c => this.markRead(c.id)); this.forceUpdate(); toast('อ่านทั้งหมดแล้ว'); },
+cur: curV,
+status, statusColor: s.typing || status === 'ออนไลน์' ? 'var(--kd-accent-ink)' : '#8A948F',
+typing: s.typing, typingLabel: (curV.name || '') + ' กำลังพิมพ์',
+closeThread: () => routeBack(() => { clearTimeout(this.replyT); this.newFrom = -1; this.setState({ open: null, typing: false, uploading: false }); }),
+calling: s.calling, notCalling: !s.calling, callingAria: s.calling ? 'true' : 'false',
+callLabel: cur ? 'โทรหา ' + cur.name : 'โทร',
+call: () => cur && this.startCall(cur),
+vcall: () => cur && this.startCall(cur, true),
+vcallLabel: cur && cur.friend ? 'วิดีโอคอลหา ' + cur.name : 'วิดีโอคอล',
+uploading: s.uploading,
+attach: () => this.attach(),
+msgs,
+chips: cur ? cur.chips.map(t => ({ text: t, send: () => this.sendText(t) })) : [],
+draft: this.draft,
+typeDraft: e => { this.draft = e.target.value; },
+key: e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); this.sendText(this.draft); } },
+send: () => this.sendText(this.draft)
+};
+this.newFrom = -1;
+return out;
+}
+}
+</script>
+</body>
+</html>

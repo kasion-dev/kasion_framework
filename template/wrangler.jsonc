@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/wrangler@4.158.0/config-schema.json",
+  "name": "__WORKER_NAME__",
+  "compatibility_date": "2026-11-01",
+  // Worker runs first: /api/* → API, everything else → static assets in public/
+  "main": "src/worker.js",
+  "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": true },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "__DB_NAME__", "database_id": "__DB_ID__", "migrations_dir": "migrations" }
+  ],
+  // Realtime: the Hub Durable Object (SQLite-backed class = available on the free plan)
+  "durable_objects": { "bindings": [{ "name": "HUB", "class_name": "Hub" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Hub"] }],
+  "workers_dev": false,
+  // ADMIN_EMAILS: comma-separated Google accounts allowed on { admin: true } routes
+  // VAPID_PUBLIC: Web Push public key (node scripts/gen_vapid.mjs) · AGORA_APP_ID: public Agora id for calls
+  "vars": { "ADMIN_EMAILS": "__ADMIN_EMAILS__", "VAPID_PUBLIC": "", "AGORA_APP_ID": "", "PUSH_SUBJECT": "https://__DOMAIN__" },
+  "routes": [{ "pattern": "__DOMAIN__", "custom_domain": true }]
+}

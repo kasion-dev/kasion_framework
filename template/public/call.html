@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>โทร</title>
+<script src="/app.config.js"></script>
+<script src="/kasion.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(0,168,90,.55)}100%{box-shadow:0 0 0 38px rgba(0,168,90,0)}}
+.ring{animation:ring 1.4s ease-out infinite}
+.cbtn{transition:transform .12s var(--kd-ease),background-color .2s}.cbtn:active{transform:scale(.9)}
+.lvl{transition:box-shadow .2s var(--kd-ease)}
+/* Video call: controls fade out; tap the screen to bring them back (auto-hide after 2s). */
+.vc-stage>*:not(#kd-remote):not(#kd-local){transition:opacity .25s ease}
+.vc-hide>*:not(#kd-remote):not(#kd-local){opacity:0;pointer-events:none}
+</style>
+</helmet>
+<div onClick="{{tapStage}}" class="{{stageCls}}" style="position: relative; isolation: isolate; width: 390px; height: 844px; box-sizing: border-box; background: {{bg}}; font-family: 'Noto Sans Thai', sans-serif; color: #fff; display: flex; flex-direction: column; overflow: hidden">
+<div style="padding: 16px; display: flex; align-items: center; gap: 10px">
+<button onClick="{{minimize}}" class="cbtn kd-press" aria-label="ย่อหน้าจอสาย" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+<div style="font-size: 13px; opacity: .8; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9FE0BD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>สายสนทนาส่วนตัว</div>
+</div>
+<div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 0 24px; text-align: center">
+<sc-if value="{{showAvatar}}"><div style="position: relative"><div class="{{ringClass}} lvl" style="box-shadow: {{levelRing}}; width: 128px; height: 128px; border-radius: 64px; background: #CDE8D6; color: #00804A; font-size: 42px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{initials}}</div><div aria-label="{{qLabel}}" title="{{qLabel}}" style="position: absolute; right: -6px; bottom: 4px; display: flex; gap: 2px; align-items: flex-end; background: rgba(0,0,0,.45); padding: 5px 6px; border-radius: 10px"><sc-for list="{{bars}}" as="b"><span style="width: 4px; height: {{b.h}}; border-radius: 2px; background: {{b.c}}"></span></sc-for></div></div>
+</sc-if>
+<div style="font-size: {{nameSize}}; font-weight: 800; text-shadow: 0 1px 6px rgba(0,0,0,.5)">{{name}}</div>
+<div style="font-size: 16px; color: #9FE0BD; font-weight: 600" role="status">{{status}}</div>
+<sc-if value="{{error}}" hint-placeholder-val="{{false}}">
+<div style="background: rgba(255,255,255,.1); border-radius: 14px; padding: 12px 14px; font-size: 14px; line-height: 1.5; max-width: 320px">{{error}}</div>
+</sc-if>
+</div>
+<sc-if value="{{isVideo}}"><div style="display: flex; justify-content: center; gap: 24px; padding: 0 32px">
+<button onClick="{{toggleCam}}" class="cbtn kd-press" aria-label="{{camLabel}}" aria-pressed="{{camOff}}" style="width: 56px; height: 56px; border-radius: 28px; border: 0; background: {{camBg}}; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{camFg}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="M15.5 10.5l6-3.5v10l-6-3.5z"/><path d="{{camSlash}}"/></svg></button>
+<button onClick="{{flipCam}}" class="cbtn kd-press" aria-label="สลับกล้องหน้า/หลัง" style="width: 56px; height: 56px; border-radius: 28px; border: 0; background: rgba(255,255,255,.14); display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><path d="M9 13.5a3 3 0 0 0 5.6 1.4M15 12.5a3 3 0 0 0-5.6-1.4"/><path d="M14.6 15l.2 1.6 1.4-.8M9.4 11l-.2-1.6-1.4.8"/></svg></button>
+</div></sc-if>
+<div style="padding: 24px 32px 40px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; justify-items: center">
+<button onClick="{{toggleMute}}" class="cbtn kd-press" aria-label="{{muteLabel}}" aria-pressed="{{muted}}" style="width: 68px; height: 68px; border-radius: 34px; border: 0; background: {{muteBg}}; display: flex; align-items: center; justify-content: center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="{{muteFg}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/><path d="{{muteSlash}}"/></svg></button>
+<button onClick="{{hangup}}" class="cbtn kd-press" aria-label="วางสาย" style="width: 76px; height: 76px; border-radius: 38px; border: 0; background: #E5484D; display: flex; align-items: center; justify-content: center"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15c5-4 13-4 18 0l-2 3-3-1v-3c-2-.6-6-.6-8 0v3l-3 1z"/></svg></button>
+<button onClick="{{toggleSpeaker}}" class="cbtn kd-press" aria-label="{{speakerLabel}}" aria-pressed="{{speaker}}" style="width: 68px; height: 68px; border-radius: 34px; border: 0; background: {{speakerBg}}; display: flex; align-items: center; justify-content: center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="{{speakerFg}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+<div style="font-size: 12px; opacity: .8">{{muteLabel}}</div>
+<div style="font-size: 12px; opacity: .8">วางสาย</div>
+<div style="font-size: 12px; opacity: .8">{{speakerLabel}}</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(p) {
+super(p);
+const q = new URLSearchParams(location.search);
+const c = store.get('call', {});
+// Backend call mode (?id= or store 'call'.id) vs legacy share-link mode (?c=).
+this.callId = q.get('id') || c.id || '';
+const same = !!this.callId && String(c.id) === String(this.callId);
+this.outgoing = same && !!c.outgoing;
+this.peer = { name: (same && c.name) || 'กำลังเชื่อมต่อ', channel: (same && c.channel) || '', back: (same && c.back) || '/chat' };
+this.video = (same && !!c.video) || q.get('v') === '1';
+this.state = { camOn: true, remoteVideo: false, status: this.outgoing ? 'กำลังเรียก…' : 'กำลังเชื่อมต่อ…', error: '', muted: false, speaker: true, peers: 0, secs: 0, lvl: 0, nq: 0, reconnecting: false, live: false, done: false };
+}
+// Leave the call screen without leaving it in history: Back must not reopen a finished call.
+exit() {
+if (this._exiting) return; this._exiting = true;
+if (this.callId) { const ended = (store.get('endedCalls', []) || []).filter(x => x !== this.callId).concat(this.callId).slice(-20); store.set('endedCalls', ended); }
+store.set('call', null);
+const back = this.peer.back || '/';
+try {
+const ref = document.referrer ? new URL(document.referrer) : null;
+// We came from the page we return to → step back so the call entry disappears from the stack.
+if (ref && ref.origin === location.origin && history.length > 1 && ref.pathname === new URL(back, location.origin).pathname) { history.back(); setTimeout(() => location.replace(back), 600); return; }
+} catch (e) {}
+location.replace(back);
+}
+componentDidMount() {
+window.addEventListener('pagehide', () => this.leave());
+// Reached again with Back / from the bfcache after the call ended → go straight back out.
+window.addEventListener('pageshow', e => { if (e.persisted && (this.state.done || this._exiting)) { this._exiting = false; this.exit(); } });
+if (this.callId && (store.get('endedCalls', []) || []).includes(this.callId)) { this.state.done = true; this.exit(); return; }
+if (this.outgoing) tone.ringback();
+if (!this.callId) { this.exit(); return; } // calls only exist through /api/calls
+this.loadCall().then(ok => { if (ok && !this.state.done) { this.join(); this.poll(); } });
+}
+async loadCall() {
+try {
+const r = await api('/api/calls/' + encodeURIComponent(this.callId));
+const c = r.call || {};
+if (c.channel) this.peer.channel = c.channel;
+if (c.video) this.video = true;
+if (c.peer && (c.peer.name || c.peer.email)) this.peer.name = c.peer.name || c.peer.email;
+if (['missed', 'declined', 'ended'].includes(c.status) && !this.state.live && !this.client) { tone.stop(); this.state.done = true; this.exit(); return false; }
+if (this.applyStatus(c.status)) return false;
+if (!this.peer.channel) { this.setState({ status: 'โทรไม่สำเร็จ', error: 'ไม่พบห้องสนทนาของสายนี้' }); return false; }
+this.forceUpdate();
+return true;
+} catch (e) {
+if (!this.peer.channel) { this.setState({ status: 'โทรไม่สำเร็จ', error: e.status === 401 ? 'ต้องเข้าสู่ระบบก่อน' : 'โหลดข้อมูลสายไม่สำเร็จ: ' + e.message }); return false; }
+return true;
+}
+}
+// Returns true when the call reached a terminal state (and schedules auto-close).
+applyStatus(st) {
+const msg = { missed: 'ปลายสายไม่รับ', declined: 'ปฏิเสธสาย', ended: 'สายสิ้นสุดแล้ว' }[st];
+if (!msg) {
+if (st === 'ringing' && this.outgoing && !this.state.live && this.state.status !== 'กำลังเรียก…' && !this.state.error) this.setState({ status: 'กำลังเรียก…' });
+return false;
+}
+if (this.state.done) return true;
+clearTimeout(this.pollT); this.pollT = null;
+tone.stop();
+this.setState({ done: true, status: msg, live: false });
+this.leave();
+setTimeout(() => this.exit(), 2000);
+return true;
+}
+poll() {
+if (this.state.done) return;
+this.pollT = setTimeout(async () => {
+try { const r = await api('/api/calls/' + encodeURIComponent(this.callId)); this.applyStatus(r.call && r.call.status); } catch (e) {}
+this.poll();
+}, 2000);
+}
+async endCall() {
+if (!this.callId || this.ended) return;
+this.ended = true;
+try { await api('/api/calls/' + encodeURIComponent(this.callId) + '/end', { method: 'POST' }); } catch (e) {}
+}
+async join() {
+const appId = (window.KASION && KASION.agoraAppId) || window.AGORA_APP_ID;
+if (!appId) { this.setState({ status: 'ยังโทรไม่ได้', error: 'ยังไม่ได้ตั้งค่า Agora App ID (KASION.agoraAppId ใน app.config.js) · ติดต่อผู้ดูแลระบบ' }); return; }
+if (!window.isSecureContext || !navigator.mediaDevices) { this.setState({ status: 'ยังโทรไม่ได้', error: 'ต้องเปิดผ่าน HTTPS และอนุญาตไมโครโฟน' }); return; }
+try {
+if (!window.AgoraRTC) await new Promise((r, j) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/agora-rtc-sdk-ng@4.22.0/AgoraRTC_N-production.js'; s.onload = r; s.onerror = j; document.head.appendChild(s); });
+AgoraRTC.setLogLevel(3);
+const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+this.client = client;
+const refresh = () => this.state.done ? null : this.setState({ peers: client.remoteUsers.length, status: client.remoteUsers.length ? 'ในสาย' : 'กำลังเรียก ' + this.peer.name + '…' });
+client.on('user-published', async (user, type) => {
+if (type === 'video') { await client.subscribe(user, 'video'); this.layers(); user.videoTrack.play(document.getElementById('kd-remote'), { fit: 'cover' }); this.setState({ remoteVideo: true }); this.peekUi(); this.startTimer(); refresh(); return; }
+if (type !== 'audio') return; await client.subscribe(user, 'audio'); user.audioTrack.play(); user.audioTrack.setVolume(this.state.speaker ? 100 : 40); this.startTimer(); refresh(); });
+client.on('user-joined', refresh);
+client.on('user-unpublished', (user, type) => { if (type === 'video') { clearTimeout(this.hideT); this.setState({ remoteVideo: false, uiHidden: false }); } });
+client.on('network-quality', q => { const v = Math.max(q.uplinkNetworkQuality || 0, q.downlinkNetworkQuality || 0); if (v !== this.state.nq) this.setState({ nq: v }); });
+client.on('connection-state-change', (cur, prev) => { if (this.state.done) return; if (cur === 'RECONNECTING') this.setState({ reconnecting: true }); else if (cur === 'CONNECTED' && this.state.reconnecting) { this.setState({ reconnecting: false }); toast('เชื่อมต่อแล้ว'); } });
+client.on('user-left', () => { refresh(); if (!client.remoteUsers.length && this.state.live && !this.state.done) { toast(this.peer.name + ' วางสายแล้ว'); this.endCall(); this.applyStatus('ended'); } });
+let token = null;
+try { token = (await api('/api/agora-token?channel=' + encodeURIComponent(this.peer.channel))).token || null; this._tok = token ? token.slice(0, 6) + '…' + token.length : ''; } catch (e) { console.warn('agora token', e); this._tok = 'ERR ' + (e.status || '') + ' ' + e.message; if (e.status === 401) { this.setState({ status: 'ยังโทรไม่ได้', error: 'ต้องเข้าสู่ระบบก่อนโทร' }); return; } }
+await client.join(appId, this.peer.channel, token, null);
+this.mic = await AgoraRTC.createMicrophoneAudioTrack({ AEC: true, ANS: true, AGC: true });
+this.startLevel();
+const tracks = [this.mic];
+if (this.video) {
+try {
+this.cam = await AgoraRTC.createCameraVideoTrack({ encoderConfig: '480p_1', facingMode: 'user', optimizationMode: 'motion' });
+this.layers(); this.cam.play(document.getElementById('kd-local'), { mirror: true, fit: 'cover' });
+tracks.push(this.cam);
+} catch (ce) { toast(/PERMISSION|NotAllowed/i.test(String(ce && (ce.code || ce.message))) ? 'ไม่ได้รับอนุญาตให้ใช้กล้อง · โทรแบบเสียงแทน' : 'เปิดกล้องไม่ได้ · โทรแบบเสียงแทน'); this.setState({ camOn: false }); }
+}
+await client.publish(tracks);
+if (this.state.done) { this.leave(); return; }
+refresh();
+} catch (e) {
+const msg = String(e && (e.code || e.message) || e);
+const th = /PERMISSION|NotAllowed/i.test(msg) ? 'ไม่ได้รับอนุญาตให้ใช้ไมโครโฟน' : /DEVICE_NOT_FOUND|NotFound/i.test(msg) ? 'ไม่พบไมโครโฟนในเครื่องนี้' : /INVALID_VENDOR_KEY|CAN_NOT_GET_GATEWAY_SERVER|token/i.test(msg) ? 'App ID หรือ token ไม่ถูกต้อง (ถ้าโปรเจกต์ Agora เปิด App Certificate ต้องมี token server)' : 'เชื่อมต่อไม่สำเร็จ: ' + msg;
+tone.stop();
+console.error('call join failed', { token: this._tok || 'none', error: e });
+this.setState({ status: 'โทรไม่สำเร็จ', error: /^เชื่อมต่อไม่สำเร็จ/.test(th) ? 'เชื่อมต่อไม่สำเร็จ · ลองใหม่อีกครั้ง' : th });
+}
+}
+startLevel() {
+clearInterval(this.lvlT);
+this.lvlT = setInterval(() => {
+let v = 0;
+try { if (this.mic && !this.state.muted) v = this.mic.getVolumeLevel() || 0; (this.client ? this.client.remoteUsers : []).forEach(u => { if (u.audioTrack) v = Math.max(v, u.audioTrack.getVolumeLevel() || 0); }); } catch (e) {}
+v = Math.round(Math.min(1, v * 1.6) * 10) / 10;
+if (v !== this.state.lvl && !this.minimized) this.setState({ lvl: v });
+}, 200);
+}
+startTimer() {
+if (this.timer) return;
+tone.stop();
+this.setState({ live: true });
+this.timer = setInterval(() => this.setState({ secs: this.state.secs + 1 }), 1000);
+}
+// Video layers live outside the rendered tree (the morph would wipe Agora's <video> nodes): remote full-screen behind the UI, local picture-in-picture on top.
+// Show the controls, then hide them again after 2s (only while the other side's video is on screen).
+peekUi() {
+clearTimeout(this.hideT);
+if (this.state.uiHidden) this.setState({ uiHidden: false });
+this.hideT = setTimeout(() => { const s = this.state; if (this.video && s.remoteVideo && !s.done && !s.error && !this.minimized) this.setState({ uiHidden: true }); }, 2000);
+}
+layers() {
+// Inside the phone frame (not the browser window): kept across re-renders via __keep.
+const root = document.querySelector('.dc-host > div'); if (!root) return;
+if (!document.getElementById('kd-remote')) { const r = document.createElement('div'); r.id = 'kd-remote'; r.__keep = true; r.style.cssText = 'position:absolute;inset:0;z-index:-1;background:#000;overflow:hidden'; root.prepend(r); }
+if (!document.getElementById('kd-local')) {
+const l = document.createElement('div'); l.id = 'kd-local'; l.__keep = true; l.setAttribute('aria-label', 'ภาพจากกล้องของคุณ');
+l.style.cssText = 'position:absolute;right:12px;top:76px;width:96px;height:136px;border-radius:14px;overflow:hidden;z-index:3;background:#1b2a22;border:2px solid rgba(255,255,255,.7);box-shadow:0 6px 20px rgba(0,0,0,.4);touch-action:none;cursor:grab';
+let sx, sy, ox, oy;
+l.addEventListener('pointerdown', e => { l.setPointerCapture(e.pointerId); sx = e.clientX; sy = e.clientY; ox = l.offsetLeft; oy = l.offsetTop; });
+l.addEventListener('pointermove', e => { if (sx == null) return; l.style.right = 'auto'; l.style.left = Math.min(root.clientWidth - l.offsetWidth - 4, Math.max(4, ox + e.clientX - sx)) + 'px'; l.style.top = Math.min(root.clientHeight - l.offsetHeight - 4, Math.max(4, oy + e.clientY - sy)) + 'px'; });
+l.addEventListener('pointerup', () => { sx = null; });
+root.appendChild(l);
+}
+}
+async leave() {
+tone.stop();
+clearInterval(this.timer); this.timer = null; clearInterval(this.lvlT);
+try { if (this.mic) { this.mic.stop(); this.mic.close(); } if (this.cam) { this.cam.stop(); this.cam.close(); } if (this.client) await this.client.leave(); } catch (e) {}
+['kd-remote', 'kd-local'].forEach(id => { const n = document.getElementById(id); if (n) n.remove(); });
+}
+// ---- Minimized call: the app keeps running in a full-screen iframe while this page (and the Agora session) stays alive.
+// A floating round bubble shows the peer + timer; tapping it brings the call screen back.
+minimize() {
+if (this.state.done || this.state.error) { this.exit(); return; }
+let frame = document.getElementById('kd-mini-app');
+if (!frame) {
+frame = document.createElement('iframe'); frame.id = 'kd-mini-app'; frame.title = KASION.name;
+frame.style.cssText = 'position:fixed;inset:0;width:100vw;height:100dvh;border:0;z-index:50;background:#fff';
+frame.src = this.peer.back || '/';
+document.body.appendChild(frame);
+}
+frame.style.display = 'block';
+let b = document.getElementById('kd-mini-bubble');
+if (!b) {
+b = document.createElement('button'); b.id = 'kd-mini-bubble'; b.setAttribute('aria-label', 'กลับไปที่สาย');
+b.style.cssText = 'position:fixed;right:16px;bottom:96px;width:72px;height:72px;border-radius:36px;border:3px solid #00A85A;background:#0A1F16;color:#fff;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;font:800 16px "Noto Sans Thai",sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35);touch-action:none;cursor:pointer';
+b.innerHTML = '<span class="i"></span><span class="t" style="font-size:11px;font-weight:700;color:#9FE0BD"></span>';
+// drag to move; a tap (no drag) restores the call screen
+let sx, sy, ox, oy, moved = false;
+b.addEventListener('pointerdown', e => { b.setPointerCapture(e.pointerId); sx = e.clientX; sy = e.clientY; const r = b.getBoundingClientRect(); ox = r.left; oy = r.top; moved = false; });
+b.addEventListener('pointermove', e => { if (sx == null) return; const dx = e.clientX - sx, dy = e.clientY - sy; if (Math.abs(dx) + Math.abs(dy) > 6) moved = true; if (moved) { b.style.left = Math.min(innerWidth - 72, Math.max(0, ox + dx)) + 'px'; b.style.top = Math.min(innerHeight - 72, Math.max(0, oy + dy)) + 'px'; b.style.right = 'auto'; b.style.bottom = 'auto'; } });
+b.addEventListener('pointerup', () => { sx = null; if (!moved) this.restore(); });
+document.body.appendChild(b);
+}
+b.style.display = 'flex';
+this.minimized = true;
+this.updateMini();
+clearInterval(this.miniT); this.miniT = setInterval(() => this.updateMini(), 1000);
+}
+restore() {
+this.minimized = false;
+this.peekUi();
+clearInterval(this.miniT);
+const f = document.getElementById('kd-mini-app'); if (f) f.style.display = 'none';
+const b = document.getElementById('kd-mini-bubble'); if (b) b.style.display = 'none';
+}
+updateMini() {
+const b = document.getElementById('kd-mini-bubble'); if (!b) return;
+const s = this.state;
+b.querySelector('.i').textContent = this.peer.name.slice(0, 2);
+b.querySelector('.t').textContent = s.done ? 'จบสาย' : s.live && s.peers ? String(Math.floor(s.secs / 60)).padStart(2, '0') + ':' + String(s.secs % 60).padStart(2, '0') : 'กำลังเรียก';
+b.style.borderColor = s.done ? '#E5484D' : '#00A85A';
+}
+renderVals() {
+const s = this.state;
+const mm = String(Math.floor(s.secs / 60)).padStart(2, '0') + ':' + String(s.secs % 60).padStart(2, '0');
+const initials = this.peer.name.slice(0, 2);
+const vLive = this.video && s.remoteVideo && !s.done;
+const hidden = vLive && s.uiHidden;
+return {
+stageCls: vLive ? 'vc-stage' + (hidden ? ' vc-hide' : '') : '',
+tapStage: e => {
+if (!vLive || (e.target.closest && e.target.closest('#kd-local'))) return;
+// Tapping a control keeps the bar up; tapping empty space toggles it.
+if (e.target.closest && e.target.closest('button')) { this.peekUi(); return; }
+if (hidden) this.peekUi(); else { clearTimeout(this.hideT); this.setState({ uiHidden: true }); }
+},
+isVideo: this.video && !s.done && !s.error, showAvatar: !vLive, nameSize: vLive ? '18px' : '26px',
+bg: vLive ? 'linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0) 22%,rgba(0,0,0,0) 62%,rgba(0,0,0,.7))' : 'linear-gradient(180deg,#0E3B26,#0A1F16 60%,#07120D)',
+camOff: String(!s.camOn), camLabel: s.camOn ? 'ปิดกล้อง' : 'เปิดกล้อง', camBg: s.camOn ? 'rgba(255,255,255,.14)' : '#fff', camFg: s.camOn ? '#fff' : '#0A1F16', camSlash: s.camOn ? '' : 'M3 3l18 18',
+toggleCam: async () => { if (!this.cam) { toast('กล้องไม่พร้อมใช้งาน'); return; } const on = !s.camOn; await this.cam.setEnabled(on); const l = document.getElementById('kd-local'); if (l) l.style.visibility = on ? 'visible' : 'hidden'; this.setState({ camOn: on }); },
+flipCam: async () => {
+if (!this.cam) { toast('กล้องไม่พร้อมใช้งาน'); return; }
+const next = this.facing === 'environment' ? 'user' : 'environment';
+try { await this.cam.setDevice({ facingMode: next }); }
+catch (e) { try { const cams = await AgoraRTC.getCameras(); if (cams.length < 2) { toast('เครื่องนี้มีกล้องเดียว'); return; } this._ci = ((this._ci || 0) + 1) % cams.length; await this.cam.setDevice(cams[this._ci].deviceId); } catch (x) { toast('สลับกล้องไม่ได้'); return; } }
+this.facing = next;
+const l = document.getElementById('kd-local'), v = l && l.querySelector('video'); if (v) v.style.transform = next === 'user' ? 'scaleX(-1)' : 'none';
+},
+name: this.peer.name, channel: this.peer.channel, peers: s.peers, initials,
+status: !s.done && s.reconnecting ? 'เชื่อมต่อใหม่…' : !s.done && s.live && s.peers ? 'ในสาย · ' + mm : s.status,
+levelRing: s.live && !s.done ? '0 0 0 ' + Math.round(4 + s.lvl * 22) + 'px rgba(0,212,116,' + (0.18 + s.lvl * 0.3).toFixed(2) + ')' : 'none',
+qLabel: ['สัญญาณ: ไม่ทราบ', 'สัญญาณดีมาก', 'สัญญาณดี', 'สัญญาณพอใช้', 'สัญญาณอ่อน', 'สัญญาณแย่มาก', 'ขาดการเชื่อมต่อ'][s.nq] || 'สัญญาณ',
+bars: [1, 2, 3, 4].map(i => { const lvl = s.nq ? Math.max(0, 6 - s.nq) - 1 : 0; const on = i <= lvl; return { h: (3 + i * 3) + 'px', c: on ? (lvl <= 1 ? '#E5484D' : lvl === 2 ? '#FFD84D' : '#00D474') : 'rgba(255,255,255,.25)' }; }),
+ringClass: s.live || s.done || s.error ? '' : 'ring',
+error: s.error,
+muted: String(s.muted), speaker: String(s.speaker),
+muteLabel: s.muted ? 'เปิดไมค์' : 'ปิดไมค์', muteBg: s.muted ? '#fff' : 'rgba(255,255,255,.14)', muteFg: s.muted ? '#0A1F16' : '#fff', muteSlash: s.muted ? 'M3 3l18 18' : '',
+speakerLabel: s.speaker ? 'ลำโพง' : 'หูฟัง', speakerBg: s.speaker ? '#fff' : 'rgba(255,255,255,.14)', speakerFg: s.speaker ? '#0A1F16' : '#fff',
+toggleMute: async () => { const m = !s.muted; if (this.mic) await this.mic.setEnabled(!m); this.setState({ muted: m }); toast(m ? 'ปิดไมค์แล้ว' : 'เปิดไมค์แล้ว'); },
+toggleSpeaker: () => { const sp = !s.speaker; (this.client ? this.client.remoteUsers : []).forEach(u => u.audioTrack && u.audioTrack.setVolume(sp ? 100 : 40)); this.setState({ speaker: sp }); },
+minimize: () => this.minimize(),
+hangup: async () => { try { navigator.vibrate && navigator.vibrate([30, 40, 60]); } catch (e) {} if (s.done) { this.exit(); return; } this.state.done = true; clearTimeout(this.pollT); await this.endCall(); await this.leave(); toast('วางสายแล้ว' + (s.secs ? ' · ' + mm : '')); setTimeout(() => this.exit(), 400); }
+};
+}
+}
+</script>
+</body>
+</html>
