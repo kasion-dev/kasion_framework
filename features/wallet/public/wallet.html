@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>กระเป๋าเงิน</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/vendor/vant.css">
+<script src="/app.config.js"></script>
+<script src="/kasion.js"></script>
+<script src="/vendor/vue.js"></script>
+<script src="/vendor/vant.js"></script>
+<script src="/kasion.vue.js"></script>
+<style>
+.bal{border-radius:20px;padding:20px 18px;color:#fff;background:linear-gradient(140deg,var(--kd-accent),var(--kd-accent-ink));margin-bottom:14px}
+.qr{display:block;width:230px;height:230px;margin:10px auto;image-rendering:pixelated;border-radius:8px}
+</style>
+</head>
+<body>
+<div id="app" class="k-app" v-cloak>
+  <k-page title="กระเป๋าเงิน" tab="wallet" :loading="loading">
+    <div class="k-pad">
+      <div class="bal"><div style="font-size: 13px; opacity: .9">ยอดเครดิต</div><div style="font-size: 34px; font-weight: 800; line-height: 1.2">฿ {{ money(w.balance) }}</div><van-button round size="small" style="margin-top: 12px; color: var(--kd-accent-ink); font-weight: 800" @click="route.sheet = 'topup'">เติมเครดิต</van-button></div>
+      <div style="font-size: 13px; font-weight: 800; color: var(--kd-mute); margin: 4px 4px 8px">รายการล่าสุด</div>
+      <k-empty v-if="!w.history.length" title="ยังไม่มีรายการ"></k-empty>
+      <van-cell-group v-else inset style="margin: 0"><van-cell v-for="h in w.history" :key="h.id" :title="h.title" :label="timeAgo(h.at)" :value="(h.amount > 0 ? '+' : '') + money(h.amount)" :value-class="h.amount > 0 ? 'plus' : ''"></van-cell></van-cell-group>
+    </div>
+  </k-page>
+  <van-popup :show="route.sheet === 'topup'" position="bottom" round closeable safe-area-inset-bottom @update:show="v => { if (!v) closeSheet() }" style="padding: 18px 16px 22px">
+    <template v-if="!charge">
+      <div style="font-size: 17px; font-weight: 800; margin-bottom: 12px">เติมเครดิตด้วยพร้อมเพย์</div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px"><van-button v-for="a in [100, 300, 500, 1000]" :key="a" size="small" round :type="amount == a ? 'primary' : 'default'" @click="amount = a">{{ a }}</van-button></div>
+      <van-field v-model="amount" type="digit" label="จำนวน (บาท)" placeholder="20 – 20,000" style="background: var(--kd-bg); border-radius: 12px"></van-field>
+      <van-button type="primary" round block :loading="busy" style="margin-top: 14px" @click="create">สร้าง QR</van-button>
+    </template>
+    <template v-else>
+      <div style="font-size: 17px; font-weight: 800; text-align: center">สแกนจ่าย ฿ {{ money(charge.amount) }}</div>
+      <img class="qr" :src="qrSrc" alt="QR พร้อมเพย์สำหรับเติมเครดิต">
+      <div v-if="charge.note" style="font-size: 13px; color: var(--kd-mute); text-align: center">{{ charge.note }}</div>
+      <div v-if="flags" role="alert" style="margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: #FDECEC; color: #B42318; font-size: 13px">{{ flags }}</div>
+      <van-uploader :after-read="onSlip" accept="image/*" :max-count="1" :preview-image="false" style="display: block; margin-top: 12px"><van-button type="primary" round block :loading="busy" icon="photo-o">โอนแล้ว · แนบสลิป</van-button></van-uploader>
+      <div style="font-size: 12px; color: var(--kd-mute); text-align: center; margin-top: 10px">ระบบจะตรวจยอดให้อัตโนมัติทุกไม่กี่วินาที</div>
+    </template>
+  </van-popup>
+</div>
+<script src="/vendor/qrcode.js"></script>
+<script>
+K.page({ route: { sheet: { def: '', push: true } }, setup({ route }) {
+  const { ref, computed, watch, onBeforeUnmount } = Vue;
+  const w = ref({ balance: 0, history: [] }), loading = ref(true), amount = ref(300), charge = ref(null), busy = ref(false), flags = ref('');
+  const load = K.onLoad(async () => { w.value = await api('/api/wallet'); loading.value = false; });
+  let timer = null;
+  const stop = () => { clearInterval(timer); timer = null; };
+  const done = (wallet) => { stop(); if (wallet) w.value = wallet; charge.value = null; flags.value = ''; sfx.play('success'); K.ok('เติมเครดิตสำเร็จ'); K.back(() => { route.sheet = ''; }); };
+  const poll = () => { stop(); timer = setInterval(async () => { if (!charge.value || document.hidden) return; try { const d = await api('/api/wallet/charge/' + charge.value.id); if (d.status === 'paid') done(d.wallet); } catch (e) {} }, 4000); };
+  watch(() => route.sheet, (v) => { if (v !== 'topup') { stop(); charge.value = null; flags.value = ''; } });
+  onBeforeUnmount(stop);
+  const loadSdk = () => window.KasionSlipReader ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://pay.kasion.dev/sdk/slip-reader.js'; s.onload = res; s.onerror = () => rej(new Error('โหลดตัวอ่านสลิปไม่สำเร็จ')); document.head.appendChild(s); });
+  return { w, loading, amount, charge, busy, flags,
+    money: (n) => Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    closeSheet: () => K.back(() => { route.sheet = ''; }),
+    qrSrc: computed(() => { if (!charge.value || !window.qrcode) return ''; const q = qrcode(0, 'M'); q.addData(charge.value.qrPayload); q.make(); return q.createDataURL(6, 8); }),
+    create: async () => { const a = Number(amount.value); if (!(a >= 20 && a <= 20000)) return K.toast('ยอดเติมต้องอยู่ระหว่าง 20–20,000 บาท'); busy.value = true; try { charge.value = (await api('/api/wallet/topup', { method: 'POST', body: { amount: a } })).charge; poll(); } catch (e) { K.fail(e.message); } busy.value = false; },
+    onSlip: async (file) => {
+      busy.value = true; flags.value = '';
+      try { await loadSdk(); const r = await KasionSlipReader.inspect(file.file); const d = await api('/api/wallet/charge/' + charge.value.id + '/slip', { method: 'POST', body: { qr: r.qr, ocr: r.ocr, ocrConfidence: r.ocrConfidence, imageHash: r.imageHash } });
+        if (d.status === 'paid') done(d.wallet); else flags.value = 'ยังตรวจสลิปไม่ผ่าน ลองแนบสลิปใหม่ หรือรอระบบตรวจยอดอัตโนมัติ'; }
+      catch (e) { flags.value = e.message || 'อ่านสลิปไม่สำเร็จ'; }
+      busy.value = false;
+    } };
+} });
+</script>
+</body>
+</html>

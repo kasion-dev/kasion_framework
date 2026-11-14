@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>ห้องแชต</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/vendor/vant.css">
+<script src="/app.config.js"></script>
+<script src="/kasion.js"></script>
+<script src="/vendor/vue.js"></script>
+<script src="/vendor/vant.js"></script>
+<script src="/kasion.vue.js"></script>
+<style>
+.room{position:relative;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;min-width:0;height:96px;padding:14px;border-radius:18px;text-decoration:none;color:#fff;overflow:hidden;box-shadow:0 6px 16px rgba(40,20,30,.10)}
+.room::after{content:"";position:absolute;right:-22px;top:-22px;width:86px;height:86px;border-radius:50%;background:rgba(255,255,255,.18)}
+</style>
+</head>
+<body>
+<div id="app" class="k-app" v-cloak>
+  <k-page title="ห้องแชต" tab="rooms" :loading="loading">
+    <div class="k-pad" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <a v-for="r in rooms" :key="r.id" class="room" :href="'/room?id=' + encodeURIComponent(r.id)" :style="{ background: 'linear-gradient(135deg,' + r.color + ',' + r.color + 'CC)' }" :aria-label="'ห้อง ' + r.name">
+        <span style="font-weight: 800; font-size: 16px; position: relative; z-index: 1">{{ r.name }}</span>
+        <span style="font-size: 12px; font-weight: 700; opacity: .95; position: relative; z-index: 1">{{ r.online ? r.online + ' คนกำลังคุย' : 'ยังว่างอยู่' }}</span>
+      </a>
+    </div>
+  </k-page>
+</div>
+<script>
+K.page({ setup() {
+  const rooms = Vue.ref([]), loading = Vue.ref(true);
+  const load = K.onLoad(async () => { rooms.value = (await api('/api/rooms')).rooms; loading.value = false; });
+  const t = setInterval(() => { if (!document.hidden) load().catch(() => {}); }, 20000);
+  Vue.onBeforeUnmount(() => clearInterval(t));
+  return { rooms, loading };
+} });
+</script>
+</body>
+</html>

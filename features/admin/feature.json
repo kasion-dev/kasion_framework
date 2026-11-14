@@ -1,0 +1,6 @@
+{
+  "title": "หน้าผู้ดูแล: สถิติ, ผู้ใช้, รายงาน, ลบเนื้อหา",
+  "use": "app.use(admin());",
+  "notes": "Open /admin. Set ADMIN_EMAILS in wrangler.jsonc. Shows reports when safety is installed and content from feed/rooms.",
+  "name": "admin"
+}

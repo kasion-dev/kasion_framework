@@ -9,7 +9,8 @@
     "deploy": "node scripts/check.mjs && wrangler deploy",
     "push:keys": "node scripts/gen_vapid.mjs",
     "icons": "sh scripts/make_icons.sh",
-    "sounds": "python3 scripts/gen_sfx.py"
+    "sounds": "python3 scripts/gen_sfx.py",
+    "kasion": "node ../kasion_framework/bin/kasion.mjs"
   },
   "devDependencies": { "wrangler": "^4.161.0" }
 }

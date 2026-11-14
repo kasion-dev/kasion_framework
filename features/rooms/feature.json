@@ -1,0 +1,12 @@
+{
+  "title": "ห้องแชตกลุ่ม realtime",
+  "use": "app.use(rooms());",
+  "tab": [
+    "rooms",
+    "ห้องแชต",
+    "/rooms",
+    "M3 6h13v9H8l-5 4zM9 15v3h8l4 3V9h-5"
+  ],
+  "notes": "Rooms are rows in the rooms table (three seeded).",
+  "name": "rooms"
+}

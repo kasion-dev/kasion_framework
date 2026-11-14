@@ -3,69 +3,47 @@
 <head>
 <meta charset="utf-8">
 <title>ตั้งค่า</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/vendor/vant.css">
 <script src="/app.config.js"></script>
 <script src="/kasion.js"></script>
+<script src="/vendor/vue.js"></script>
+<script src="/vendor/vant.js"></script>
+<script src="/kasion.vue.js"></script>
 </head>
 <body>
-<x-dc>
-<helmet>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
-<style>
-body{margin:0}
-button{font-family:inherit;cursor:pointer}
-input,textarea{font-family:inherit}
-.hs::-webkit-scrollbar{display:none}
-@keyframes kdspin{to{rotate:360deg}}
-.sp{width:28px;height:28px;border-radius:14px;border:3px solid var(--kd-accent-soft);border-top-color:var(--kd-accent);animation:kdspin .8s linear infinite}
-
-.st-row{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border:0;width:100%;text-align:left;font-size:15px;color:var(--kd-ink);border-bottom:1px solid #F0F2F1;text-decoration:none;box-sizing:border-box}
-.st-sw{width:46px;height:28px;border-radius:14px;border:0;position:relative;transition:background .2s;flex-shrink:0}
-.st-sw i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:11px;background:#fff;transition:translate .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
-.st-sw[aria-checked=true] i{translate:18px 0}
-
-</style>
-</helmet>
-<div style="width: 390px; height: 844px; box-sizing: border-box; background: var(--kd-bg); font-family: 'Noto Sans Thai', sans-serif; color: var(--kd-ink); display: flex; flex-direction: column; overflow: hidden; position: relative">
-<div style="padding: 16px; background: #fff; border-bottom: 1px solid var(--kd-line)"><div style="font-size: 20px; font-weight: 800">ตั้งค่า</div></div>
-<div style="flex: 1; overflow-y: auto; padding: 14px 14px 20px">
-<div class="kd-card" style="display: flex; align-items: center; gap: 12px; padding: 14px; margin-bottom: 14px">
-<span style="width: 56px; height: 56px; border-radius: 28px; background: var(--kd-accent-soft) url('{{photo}}') center/cover; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: var(--kd-accent-ink)">{{initial}}</span>
-<div style="min-width: 0"><div style="font-weight: 800; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{name}}</div><div style="font-size: 13px; color: var(--kd-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{email}}</div></div>
+<div id="app" class="k-app" v-cloak>
+  <k-page title="ตั้งค่า" tab="settings">
+    <div class="k-pad">
+      <div class="k-card" style="display: flex; align-items: center; gap: 12px; padding: 14px; margin-bottom: 14px">
+        <k-avatar :src="user.photo" :name="user.name" :size="56"></k-avatar>
+        <div style="min-width: 0"><div style="font-weight: 800; font-size: 17px">{{ user.name }}</div><div style="font-size: 13px; color: var(--kd-mute)">{{ user.email }}</div></div>
+      </div>
+      <van-cell-group inset style="margin: 0">
+        <van-cell title="การแจ้งเตือน" :label="pushHint" :value="pushLabel" is-link @click="enablePush"></van-cell>
+        <van-cell title="เสียงเอฟเฟกต์" center><template #right-icon><van-switch :model-value="sound" @update:model-value="setSound" size="22"></van-switch></template></van-cell>
+        <van-cell v-if="me.admin" title="ผู้ดูแลระบบ" :value="stats ? 'ผู้ใช้ ' + stats.users + ' คน' : '…'"></van-cell>
+        <van-cell title="ออกจากระบบ" is-link title-style="color: #C92A2A; font-weight: 700" @click="signOut"></van-cell>
+      </van-cell-group>
+    </div>
+  </k-page>
 </div>
-<div style="border-radius: 16px; overflow: hidden; border: 1px solid var(--kd-line)">
-<button class="st-row kd-press" onClick="{{enablePush}}"><span style="flex: 1">การแจ้งเตือน<br><small style="color: var(--kd-mute)">{{pushHint}}</small></span><span style="font-size: 13px; font-weight: 800; color: {{pushColor}}">{{pushLabel}}</span></button>
-<div class="st-row"><span style="flex: 1">เสียงเอฟเฟกต์</span><button class="st-sw" role="switch" aria-checked="{{sfxOn}}" aria-label="เสียงเอฟเฟกต์" onClick="{{toggleSfx}}" style="background: {{sfxBg}}"><i></i></button></div>
-<sc-if value="{{isAdmin}}"><div class="st-row" style="color: var(--kd-mute)">คุณเป็นผู้ดูแลระบบ<span style="flex: 1"></span><span style="font-size: 13px">ผู้ใช้ทั้งหมด {{users}}</span></div></sc-if>
-<button class="st-row kd-press" onClick="{{signOut}}" style="color: #C92A2A; font-weight: 700; border-bottom: 0">ออกจากระบบ</button>
-</div>
-</div>
-<nav aria-label="เมนูหลัก" style="display: flex; background: #fff; border-top: 1px solid var(--kd-line); padding: 6px 4px 8px; flex-shrink: 0">
-<sc-for list="{{tabs}}" as="t"><a href="{{t.href}}" aria-current="{{t.current}}" class="kd-press" style="flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; text-decoration: none; color: {{t.color}}; font-size: 11px; font-weight: 700"><svg width="24" height="24" viewBox="0 0 24 24" fill="{{t.fill}}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.icon}}"/></svg>{{t.label}}</a></sc-for>
-</nav>
-</div>
-</x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
-class Component extends DCLogic {
-constructor(p) { super(p); this.state = { me: null, stats: null }; }
-async componentDidMount() {
-const me = await requireUser(); if (!me) return;
-this.setState({ me });
-if (me.admin) api('/api/admin/stats').then(stats => this.setState({ stats })).catch(() => {});
-}
-renderVals() {
-const s = this.state, u = (s.me && s.me.user) || {}, on = sfx.on(), ps = pushSetup.state();
-return {
-name: u.name || '…', email: u.email || '', photo: u.photo || '', initial: u.photo ? '' : String(u.name || '?').slice(0, 1).toUpperCase(),
-pushLabel: ({ granted: 'เปิดอยู่', denied: 'ถูกปิดไว้', unsupported: 'ไม่รองรับ' })[ps] || 'แตะเพื่อเปิด', pushColor: ps === 'granted' ? '#1E8E4E' : 'var(--kd-accent)',
-pushHint: ps === 'unsupported' ? 'บน iPhone ต้องติดตั้งแอปที่หน้าโฮมก่อน' : ps === 'denied' ? 'เปิดสิทธิ์แจ้งเตือนในการตั้งค่าเบราว์เซอร์' : 'รับแจ้งเตือนข้อความใหม่ แม้ปิดแอปอยู่',
-enablePush: async () => { const r = await pushSetup.enable(); toast(r === 'granted' ? 'เปิดการแจ้งเตือนแล้ว' : r === 'unsupported' ? 'อุปกรณ์นี้ยังไม่รองรับ' : r === 'denied' ? 'การแจ้งเตือนถูกปิดไว้ในเบราว์เซอร์' : 'เปิดการแจ้งเตือนไม่สำเร็จ'); this.forceUpdate(); },
-sfxOn: String(on), sfxBg: on ? 'var(--kd-accent)' : '#CBD2CE', toggleSfx: () => { sfx.set(!on); this.forceUpdate(); if (!on) sfx.play('receive'); },
-isAdmin: !!(s.me && s.me.admin), users: s.stats ? s.stats.users : '…',
-signOut: async () => { if (!confirm('ออกจากระบบ?')) return; try { await auth.signOut(); } catch (e) {} location.replace('/login'); },
-tabs: tabBar('settings')
-};
-}
-}
+<script>
+K.page({
+  setup({ me }) {
+    const { ref, computed } = Vue;
+    const ps = ref(pushSetup.state()), sound = ref(sfx.on()), stats = ref(null);
+    if (me.admin) K.onLoad(async () => { stats.value = await api('/api/admin/stats'); });
+    return {
+      sound, stats,
+      pushLabel: computed(() => ({ granted: 'เปิดอยู่', denied: 'ถูกปิดไว้', unsupported: 'ไม่รองรับ' })[ps.value] || 'แตะเพื่อเปิด'),
+      pushHint: computed(() => ps.value === 'unsupported' ? 'บน iPhone ต้องติดตั้งแอปที่หน้าโฮมก่อน' : ps.value === 'denied' ? 'เปิดสิทธิ์แจ้งเตือนในการตั้งค่าเบราว์เซอร์' : 'รับแจ้งเตือนข้อความใหม่ แม้ปิดแอปอยู่'),
+      enablePush: async () => { const r = await pushSetup.enable(); ps.value = pushSetup.state(); K.toast(r === 'granted' ? 'เปิดการแจ้งเตือนแล้ว' : r === 'unsupported' ? 'อุปกรณ์นี้ยังไม่รองรับ' : r === 'denied' ? 'การแจ้งเตือนถูกปิดไว้ในเบราว์เซอร์' : 'เปิดการแจ้งเตือนไม่สำเร็จ'); },
+      setSound: (v) => { sfx.set(v); sound.value = v; if (v) sfx.play('receive'); },
+      signOut: async () => { if (!(await K.confirm('ออกจากระบบ?'))) return; try { await auth.signOut(); } catch (e) {} location.replace('/login'); },
+    };
+  }
+});
 </script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 # Screen runtime guide (`public/kasion.js`)
 
-A screen is one HTML file in `public/` (served at `/<name>`). No build step. Start from `public/_blank.html`.
+A screen is one HTML file in `public/` (served at `/<name>`). No build step. This is the older DC runtime, still used by `chat.html`, `call.html` and `login.html`; write new screens with Vue (`docs/vue.md`). A DC starter is `public/blank_dc.html`.
 
 ```html
 <script src="/app.config.js"></script><script src="/kasion.js"></script>   <!-- in <head> -->

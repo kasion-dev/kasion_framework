@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>หน้าใหม่</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/vendor/vant.css">
+<script src="/app.config.js"></script>
+<script src="/kasion.js"></script>
+<script src="/vendor/vue.js"></script>
+<script src="/vendor/vant.js"></script>
+<script src="/kasion.vue.js"></script>
+</head>
+<body>
+<!-- Copy this file to public/<name>.html → served at /<name>. Guide: kasion_framework/docs/vue.md -->
+<div id="app" class="k-app" v-cloak>
+  <k-page title="หน้าใหม่" back :loading="loading">
+    <div class="k-pad">
+      <div class="k-card" style="padding: 16px">สวัสดี {{ user.name }} · เริ่มเขียนหน้าของคุณที่นี่</div>
+    </div>
+  </k-page>
+</div>
+<script>
+K.page({
+  setup({ user }) {
+    const loading = Vue.ref(true);
+    K.onLoad(async () => { /* const d = await api('/api/…'); */ loading.value = false; });
+    return { loading };
+  }
+});
+</script>
+</body>
+</html>

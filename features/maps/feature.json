@@ -1,0 +1,6 @@
+{
+  "title": "แผนที่ (Leaflet + OSM + เส้นทาง OSRM)",
+  "use": null,
+  "notes": "Client only: add <script src=\"/maps.js\"></script> to a page and use window.kmap. No server part.",
+  "name": "maps"
+}

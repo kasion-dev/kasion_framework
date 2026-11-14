@@ -4,13 +4,19 @@
 ไว้ในที่เดียว สร้างแอปใหม่ได้ในคำสั่งเดียว แล้วเขียนเฉพาะฟีเจอร์ของแอปนั้น
 
 **Stack:** Cloudflare Worker + D1 + Durable Object (realtime) + ไฟล์ static · ล็อกอินด้วย Google ผ่าน Firebase ·
-หน้าจอเป็น HTML ที่เรนเดอร์ด้วย runtime ของเราเอง (`kasion.js`) ไม่มีขั้นตอน build
+หน้าจอเขียนด้วย Vue 3 + Vant 4 (ฝังไฟล์ไว้ใน `public/vendor/` ไม่มีขั้นตอน build) · โมดูลเสริมติดตั้งได้ทีละตัว
 
 ## เริ่มแอปใหม่
 
 ```bash
-node bin/create.mjs kasion_notes --title "kasion notes" --domain notes.kasion.dev --accent "#3B82F6" --admin you@gmail.com --provision
+node bin/create.mjs kasion_notes --title "kasion notes" --domain notes.kasion.dev --accent "#3B82F6" --admin you@gmail.com --with profile,safety,feed --provision
 ```
+
+โมดูลเสริม (`--with …` ตอนสร้าง หรือ `npm run kasion -- add <ชื่อ>` ในแอป): `profile` โปรไฟล์ · `safety` บล็อก/รายงาน ·
+`feed` กระดานโพสต์ · `rooms` ห้องแชตกลุ่ม · `people` คนออนไลน์/ใกล้ฉัน · `invites` ลิงก์ชวนเพื่อน · `admin` หน้าผู้ดูแล ·
+`wallet` กระเป๋าเงิน + เติมพร้อมเพย์ · `maps` แผนที่ — รายละเอียดใน [docs/features.md](docs/features.md) หน้าจอเขียนตาม [docs/vue.md](docs/vue.md)
+
+คำสั่งอื่น: `kasion list` · `kasion update` (ดึง core รุ่นใหม่เข้าแอป) · `kasion doctor` (ตรวจการตั้งค่า)
 
 - ชื่อแอปเป็น snake_case เสมอ โฟลเดอร์ใหม่จะอยู่ข้าง ๆ `kasion_framework`
 - `--provision` สร้างฐานข้อมูล D1 และรัน migration ให้ (ทั้งในเครื่องและบน Cloudflare)
@@ -56,7 +62,7 @@ npm run deploy     # ตรวจแล้ว deploy
 ## ดูแล framework
 
 ```bash
-npm test    # สร้างแอปทดสอบในโฟลเดอร์ชั่วคราว รันในเครื่อง แล้วตรวจทุก route หลัก (46 ข้อ)
+npm test    # สร้างแอปทดสอบในโฟลเดอร์ชั่วคราว รันในเครื่อง ติดตั้งทุกโมดูลผ่าน CLI แล้วตรวจทุก route (121 ข้อ)
 ```
 
 แก้ `template/src/core/` หรือ `template/public/kasion.js` แล้วต้องรัน `npm test` ทุกครั้ง

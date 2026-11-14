@@ -1,8 +1,14 @@
 {
   "name": "kasion_framework",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "description": "Starter kit for kasion apps: Cloudflare Worker + D1 + Durable Object realtime, Firebase sign-in, screen runtime.",
-  "bin": { "kasion-create": "bin/create.mjs" },
-  "scripts": { "create": "node bin/create.mjs", "test": "node scripts/smoke.mjs" }
+  "bin": {
+    "kasion": "bin/kasion.mjs",
+    "kasion-create": "bin/create.mjs"
+  },
+  "scripts": {
+    "create": "node bin/create.mjs",
+    "test": "node scripts/smoke.mjs"
+  }
 }

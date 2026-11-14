@@ -6,10 +6,13 @@ needs), start here instead of writing infrastructure again.
 ## Starting a new app
 
 1. `export PATH="$HOME/.nvm/versions/node/v22.23.1/bin:$PATH"` (wrangler needs Node 22; the default shell Node is 18).
-2. `node bin/create.mjs <snake_case_name> --title "…" --domain <sub>.kasion.dev --accent "#RRGGBB" --admin kasidit.wans@gmail.com --provision`
+2. `node bin/create.mjs <snake_case_name> --title "…" --domain <sub>.kasion.dev --accent "#RRGGBB" --admin kasidit.wans@gmail.com --with <features> --provision`
    - Names are always snake_case (`kasion_notes`), never kebab-case. The Worker name is derived (`kasion-notes`).
    - `--provision` creates the D1 database and applies migrations. Creating cloud resources is fine when he asked for the app.
-3. Build the feature in the new project: tables in `migrations/0002_*.sql`+, routes in `src/worker.js`, screens in `public/*.html`.
+   - `--with profile,safety,feed,rooms,people,invites,admin,wallet,maps` (or `all`) installs ready modules; later use
+     `node ../kasion_framework/bin/kasion.mjs add <feature>` inside the app. Read `docs/features.md` before building any of
+     those by hand.
+3. Build the feature in the new project: tables in `migrations/0002_*.sql`+, routes in `src/worker.js`, screens in `public/*.html` with Vue 3 + Vant 4 (copy `blank.html`, read `docs/vue.md`).
 4. Verify locally (below), then `npm run deploy`. Ask before `git commit` unless he already said to commit/push.
 5. Tell him the two things only he can do: add the domain to Firebase Authorized domains; paste secrets
    (`AGORA_APP_CERTIFICATE`, `PAY_API_KEY`) into `wrangler secret put` himself — never ask for secret values in chat.
@@ -22,7 +25,7 @@ needs), start here instead of writing infrastructure again.
 - **Never put secrets or TEST_AUTH in `wrangler.jsonc`.** Secrets go through `wrangler secret put`; `TEST_AUTH=1` lives only in `.dev.vars`.
 - **Reply in Thai**; code, comments and identifiers in English.
 - **Do not edit `src/core/` or `public/kasion.js` inside an app** to add app behaviour. Use the plugin options and hooks
-  (`canMessage`, `profileOf`, `hidden`, `channels`, `onMe`). If the core is wrong, fix it here, run `npm test`, then copy it into the app.
+  (`canMessage`, `channels`, `onMe`, `app.provide`, `app.allowChannel`, `app.adminContent`). If the core is wrong, fix it here, run `npm test`, then copy it into the app.
 - **A variable declared with `const`/`let` later in the same function shadows earlier uses** — this caused a production 500
   (`const pub` hiding a helper). Name locals distinctly.
 - **D1 allows 100 bound parameters per statement.** Cap `IN (…)` lists at 90.
@@ -41,10 +44,16 @@ needs), start here instead of writing infrastructure again.
 ## Where things are
 
 - `template/src/core/` server modules · `template/public/kasion.js` client runtime · `template/public/*.html` starter screens
-- `docs/server.md`, `docs/runtime.md`, `docs/recipes.md`, `docs/gotchas.md` — read the relevant one before writing code
+- `features/<name>/` optional modules (`feature.json`, `server.js`, `migration.sql`, `public/`) · `bin/kasion.mjs` CLI (`create`, `list`, `add`, `update`, `doctor`)
+- `docs/vue.md` (screens), `docs/features.md` (modules + extension points), `docs/server.md`, `docs/recipes.md`, `docs/gotchas.md`,
+  `docs/runtime.md` (older DC runtime, still used by chat/call/login) — read the relevant one before writing code
 - Reference apps built on the same pieces: `../kasion_date` (community + dating: board, rooms, admin, invites, location)
   and `../kasion_delivery` (customer / rider / merchant / admin, maps, wallet + pay.kasion.dev top-ups, host-based routing)
 
 ## Changing the framework
 
-Edit `template/`, bump `version` in `package.json`, run `npm test` (must pass), update the docs that describe what changed.
+Edit `template/` or `features/`, bump `version` in `package.json`, run `npm test` (must pass), update the docs that describe what changed.
+
+- Files starting with `_` are ignored by the global gitignore on this Mac: never name a template file `_something`.
+
+- `vendor/` is in the global gitignore on this Mac; the repo `.gitignore` re-includes it (`!vendor/`). Keep that line or Vue/Vant never reach git and deploys from a fresh clone break.

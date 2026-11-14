@@ -1,0 +1,12 @@
+{
+  "title": "กระดานโพสต์ realtime (ถูกใจ, ความคิดเห็น, รูป)",
+  "use": "app.use(feed());",
+  "tab": [
+    "feed",
+    "กระดาน",
+    "/feed",
+    "M4 5h16v11H9l-5 4z"
+  ],
+  "notes": "Readable by signed-out visitors at /feed (GET /api/public/feed).",
+  "name": "feed"
+}

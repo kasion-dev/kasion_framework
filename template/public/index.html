@@ -3,121 +3,80 @@
 <head>
 <meta charset="utf-8">
 <title>หน้าแรก</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/vendor/vant.css">
 <script src="/app.config.js"></script>
 <script src="/kasion.js"></script>
+<script src="/vendor/vue.js"></script>
+<script src="/vendor/vant.js"></script>
+<script src="/kasion.vue.js"></script>
+<style>
+.people{display:flex;gap:12px;overflow-x:auto;padding:0 2px 12px;scrollbar-width:none}
+.people a{flex:0 0 64px;text-align:center;text-decoration:none;color:var(--kd-ink);font-size:12px;font-weight:700}
+.people a span.n{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px}
+.note{display:flex;gap:10px;padding:12px;margin-bottom:8px}
+.sec{font-size:13px;font-weight:800;color:var(--kd-mute);margin:2px 4px 8px}
+</style>
 </head>
 <body>
-<x-dc>
-<helmet>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
-<style>
-body{margin:0}
-button{font-family:inherit;cursor:pointer}
-input,textarea{font-family:inherit}
-.hs::-webkit-scrollbar{display:none}
-@keyframes kdspin{to{rotate:360deg}}
-.sp{width:28px;height:28px;border-radius:14px;border:3px solid var(--kd-accent-soft);border-top-color:var(--kd-accent);animation:kdspin .8s linear infinite}
-
-.nt-av{width:40px;height:40px;border-radius:20px;background:var(--kd-accent-soft) center/cover;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--kd-accent-ink);position:relative}
-.nt-in{flex:1;min-width:0;height:44px;border-radius:22px;border:1.5px solid var(--kd-line);padding:0 16px;font-size:16px;outline:none;background:#fff}
-.nt-in:focus{border-color:var(--kd-accent);box-shadow:0 0 0 3px var(--kd-accent-soft)}
-.nt-chip{height:34px;padding:0 14px;border-radius:17px;border:1.5px solid var(--kd-line);background:#fff;font-size:13px;font-weight:700;color:var(--kd-ink);flex-shrink:0}
-.nt-chip[aria-pressed=true]{background:var(--kd-accent);border-color:var(--kd-accent);color:#fff}
-@keyframes ntIn{from{opacity:0;translate:0 -8px}to{opacity:1;translate:0 0}}
-.nt-new{animation:ntIn .3s var(--kd-ease) both}
-
-</style>
-</helmet>
-<div style="width: 390px; height: 844px; box-sizing: border-box; background: var(--kd-bg); font-family: 'Noto Sans Thai', sans-serif; color: var(--kd-ink); display: flex; flex-direction: column; overflow: hidden; position: relative">
-<div style="display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; background: #fff; border-bottom: 1px solid var(--kd-line)">
-<div style="flex: 1; min-width: 0"><div style="font-size: 20px; font-weight: 800">{{appName}}</div><div style="font-size: 13px; color: var(--kd-mute)">{{hello}}</div></div>
-<span style="display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 16px; background: #E9F8EF; color: #1E8E4E; font-size: 13px; font-weight: 800"><span style="width: 8px; height: 8px; border-radius: 4px; background: {{dot}}"></span>{{liveLabel}}</span>
+<div id="app" class="k-app" v-cloak>
+  <k-page :title="appName" tab="home">
+    <template #right><van-tag round type="success" size="medium">{{ live.connected.value ? live.count.value + ' คนออนไลน์' : 'กำลังเชื่อมต่อ' }}</van-tag></template>
+    <div class="k-pad">
+      <template v-if="people.length">
+        <div class="sec">ทักใครสักคน</div>
+        <div class="people">
+          <a v-for="u in people" :key="u.uid" :href="'/chat?with=m_' + encodeURIComponent(u.uid)">
+            <k-avatar :src="u.photo" :name="u.name" :size="56" :online="u.online" style="margin: 0 auto"></k-avatar><span class="n">{{ u.name }}</span>
+          </a>
+        </div>
+      </template>
+      <van-field v-model="draft" placeholder="เขียนโน้ตถึงทุกคน…" maxlength="300" enterkeyhint="send" @keydown.enter.prevent="add" class="k-card" style="margin-bottom: 12px" aria-label="เขียนโน้ต">
+        <template #button><van-button type="primary" size="small" round :loading="saving" @click="add">ส่ง</van-button></template>
+      </van-field>
+      <van-tabs v-model:active="route.who" type="card" style="margin-bottom: 12px">
+        <van-tab title="ทั้งหมด" name="all"></van-tab><van-tab title="ของฉัน" name="mine"></van-tab>
+      </van-tabs>
+      <div v-if="loading" class="k-center"><van-loading size="28"></van-loading></div>
+      <k-empty v-else-if="!shown.length" title="ยังไม่มีโน้ต" text="เขียนอันแรกได้เลย"></k-empty>
+      <div v-for="n in shown" :key="n.id" class="k-card note" :class="{ 'k-new': n.id === fresh }">
+        <k-avatar :src="n.author.photo" :name="n.author.name" :size="40"></k-avatar>
+        <div style="flex: 1; min-width: 0">
+          <div style="font-size: 13px; font-weight: 800">{{ n.author.name }} <span style="font-weight: 600; color: var(--kd-mute)">· {{ timeAgo(n.at) }}</span></div>
+          <div style="font-size: 15px; line-height: 1.5; word-break: break-word; white-space: pre-wrap">{{ n.text }}</div>
+        </div>
+        <van-icon v-if="n.mine" name="cross" size="18" color="#8A948F" role="button" tabindex="0" aria-label="ลบโน้ตนี้" @click="remove(n)" @keydown.enter="remove(n)"></van-icon>
+      </div>
+    </div>
+  </k-page>
 </div>
-<div style="flex: 1; overflow-y: auto; padding: 12px 12px 16px">
-<sc-if value="{{hasPeople}}">
-<div style="font-size: 13px; font-weight: 800; color: var(--kd-mute); margin: 2px 4px 8px">ทักใครสักคน</div>
-<div class="hs" style="display: flex; gap: 12px; overflow-x: auto; padding: 0 2px 12px; scrollbar-width: none">
-<sc-for list="{{people}}" as="u"><a href="{{u.href}}" class="kd-press" style="flex: 0 0 64px; text-align: center; text-decoration: none; color: var(--kd-ink); font-size: 12px; font-weight: 700"><span class="nt-av" style="width: 56px; height: 56px; border-radius: 28px; margin: 0 auto 4px; background-image: url('{{u.photo}}')">{{u.initial}}<sc-if value="{{u.online}}"><span style="position: absolute; right: 0; bottom: 0; width: 13px; height: 13px; border-radius: 7px; background: #2FB86A; border: 2px solid #fff"></span></sc-if></span><span style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{u.name}}</span></a></sc-for>
-</div>
-</sc-if>
-<div class="kd-card" style="padding: 12px; margin-bottom: 12px"><div style="display: flex; gap: 8px">
-<input id="nt-text" class="nt-in" maxlength="300" value="{{draft}}" onInput="{{inDraft}}" onKeydown="{{key}}" placeholder="เขียนโน้ตถึงทุกคน…" aria-label="เขียนโน้ต" enterkeyhint="send" autocomplete="off">
-<button onClick="{{add}}" class="kd-press" aria-busy="{{busyAria}}" style="height: 44px; padding: 0 18px; border-radius: 22px; border: 0; background: var(--kd-accent); color: #fff; font-weight: 800; font-size: 15px; flex-shrink: 0">{{addLabel}}</button>
-</div></div>
-<div class="hs" style="display: flex; gap: 8px; overflow-x: auto; margin-bottom: 10px; scrollbar-width: none" role="group" aria-label="กรองโน้ต"><sc-for list="{{filters}}" as="f"><button class="nt-chip kd-press" aria-pressed="{{f.on}}" onClick="{{f.pick}}">{{f.label}}</button></sc-for></div>
-<sc-if value="{{loading}}"><div style="display: flex; justify-content: center; padding: 40px 0"><div class="sp" role="status" aria-label="กำลังโหลด"></div></div></sc-if>
-<sc-if value="{{empty}}"><div style="text-align: center; padding: 40px 20px; color: var(--kd-mute)">ยังไม่มีโน้ต เขียนอันแรกได้เลย</div></sc-if>
-<sc-for list="{{notes}}" as="n">
-<div class="kd-card {{n.cls}}" style="display: flex; gap: 10px; padding: 12px; margin-bottom: 8px">
-<span class="nt-av" style="background-image: url('{{n.photo}}')">{{n.initial}}</span>
-<div style="flex: 1; min-width: 0"><div style="font-size: 13px; font-weight: 800">{{n.name}} <span style="font-weight: 600; color: var(--kd-mute)">· {{n.when}}</span></div><div style="font-size: 15px; line-height: 1.5; word-break: break-word; white-space: pre-wrap">{{n.text}}</div></div>
-<sc-if value="{{n.mine}}"><button onClick="{{n.del}}" aria-label="ลบโน้ตนี้" class="kd-press" style="width: 32px; height: 32px; border-radius: 16px; border: 0; background: var(--kd-bg); color: var(--kd-mute); flex-shrink: 0">✕</button></sc-if>
-</div>
-</sc-for>
-</div>
-<nav aria-label="เมนูหลัก" style="display: flex; background: #fff; border-top: 1px solid var(--kd-line); padding: 6px 4px 8px; flex-shrink: 0">
-<sc-for list="{{tabs}}" as="t"><a href="{{t.href}}" aria-current="{{t.current}}" class="kd-press" style="flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; text-decoration: none; color: {{t.color}}; font-size: 11px; font-weight: 700"><svg width="24" height="24" viewBox="0 0 24 24" fill="{{t.fill}}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.icon}}"/></svg>{{t.label}}</a></sc-for>
-</nav>
-</div>
-</x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
-// Starter page: shows the patterns to copy — requireUser, api(), a realtime channel, routeKeys, optimistic UI.
-class Component extends DCLogic {
-constructor(p) {
-super(p);
-this.draft = '';
-this.state = { loading: true, notes: [], people: [], who: 'all', busy: false, live: false, online: 0 };
-this.routeKeys = { who: { def: 'all' } };   // ?who=mine survives refresh / Back
-}
-async componentDidMount() {
-const me = await requireUser(); if (!me) return;
-this.me = me.user; this.forceUpdate();
-this.load();
-api('/api/users').then(d => this.setState({ people: d.users || [] })).catch(() => {});
-// everyone on this page shares the 'notes' channel (allowed by `channels` in src/worker.js)
-liveChannel('notes', ev => this.onLive(ev), again => { this.setState({ live: true }); if (again) this.load(); });
-}
-async load() {
-try { const d = await api('/api/notes'); this.setState({ loading: false, notes: d.notes || [], online: d.online || 0 }); }
-catch (e) { this.setState({ loading: false }); toast('โหลดไม่สำเร็จ: ' + e.message); }
-}
-onLive(ev) {
-const s = this.state;
-if (ev.type === 'count') this.setState({ online: ev.n, live: true });
-else if (ev.type === 'note' && ev.by !== this.me.uid && !s.notes.some(x => x.id === ev.note.id)) { this.newId = ev.note.id; sfx.play('receive', .5); this.setState({ notes: [ev.note].concat(s.notes) }); }
-else if (ev.type === 'note_deleted' && s.notes.some(x => x.id === ev.id)) this.setState({ notes: s.notes.filter(x => x.id !== ev.id) });
-}
-async add() {
-const text = this.draft.trim();
-if (!text || this.state.busy) return;
-this.setState({ busy: true });
-try {
-const d = await api('/api/notes', { method: 'POST', body: { text } });
-this.draft = ''; const n = document.getElementById('nt-text'); if (n) n.value = '';
-this.newId = d.note.id; sfx.play('send', .7);
-this.setState({ busy: false, notes: [d.note].concat(this.state.notes.filter(x => x.id !== d.note.id)) });
-} catch (e) { this.setState({ busy: false }); toast('บันทึกไม่สำเร็จ: ' + e.message); }
-}
-renderVals() {
-const s = this.state, me = this.me || {};
-const newId = this.newId; this.newId = null;
-const list = s.who === 'mine' ? s.notes.filter(n => n.mine) : s.notes;
-const av = a => ({ photo: a.photo || '', initial: a.photo ? '' : String(a.name || '?').slice(0, 1).toUpperCase() });
-return {
-appName: KASION.name, hello: me.name ? 'สวัสดี ' + me.name : 'กำลังโหลด…',
-liveLabel: s.live ? s.online + ' คนออนไลน์' : 'กำลังเชื่อมต่อ', dot: s.live ? '#2FB86A' : '#C9D3CE',
-hasPeople: s.people.length > 0,
-people: s.people.slice(0, 20).map(u => Object.assign(av(u), { name: u.name || 'ผู้ใช้', online: u.online, href: '/chat?with=' + encodeURIComponent('m_' + u.uid) })),
-draft: this.draft, inDraft: e => { this.draft = e.target.value; }, key: e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); this.add(); } },
-add: () => this.add(), busyAria: String(s.busy), addLabel: s.busy ? '…' : 'ส่ง',
-filters: [['all', 'ทั้งหมด'], ['mine', 'ของฉัน']].map(([id, label]) => ({ label, on: String(s.who === id), pick: () => this.setState({ who: id }) })),
-loading: s.loading, empty: !s.loading && !list.length,
-notes: list.map(n => Object.assign(av(n.author || {}), { cls: n.id === newId ? 'nt-new' : '', name: (n.author || {}).name || 'ผู้ใช้', when: timeAgo(n.at), text: n.text, mine: n.mine,
-del: async () => { if (!confirm('ลบโน้ตนี้?')) return; try { await api('/api/notes/' + n.id, { method: 'DELETE' }); this.setState({ notes: this.state.notes.filter(x => x.id !== n.id) }); } catch (e) { toast('ลบไม่สำเร็จ: ' + e.message); } } })),
-tabs: tabBar('home')
-};
-}
-}
+<script>
+// Starter page — the patterns to copy: K.page, api(), K.live (realtime), route state in the URL, optimistic UI.
+K.page({
+  route: { who: 'all' },                      // ?who=mine survives refresh / Back
+  setup({ user, route }) {
+    const { ref, computed } = Vue;
+    const notes = ref([]), people = ref([]), loading = ref(true), draft = ref(''), saving = ref(false), fresh = ref('');
+    const load = K.onLoad(async () => { notes.value = (await api('/api/notes')).notes; loading.value = false; });
+    K.onLoad(async () => { people.value = (await api('/api/users')).users.slice(0, 20); });
+    // everyone on this page shares the 'notes' channel; reload after a reconnect
+    const live = K.live('notes', {
+      note(ev) { if (ev.by !== user.uid && !notes.value.some(x => x.id === ev.note.id)) { fresh.value = ev.note.id; notes.value.unshift(ev.note); sfx.play('receive', .5); } },
+      note_deleted(ev) { notes.value = notes.value.filter(x => x.id !== ev.id); },
+    }, load);
+    const add = async () => {
+      const text = draft.value.trim();
+      if (!text || saving.value) return;
+      saving.value = true;
+      try { const d = await api('/api/notes', { method: 'POST', body: { text } }); draft.value = ''; fresh.value = d.note.id; notes.value.unshift(d.note); sfx.play('send', .7); }
+      catch (e) { K.fail(e.message); }
+      saving.value = false;
+    };
+    const remove = async (n) => { if (!(await K.confirm('ลบโน้ตนี้?'))) return; try { await api('/api/notes/' + n.id, { method: 'DELETE' }); notes.value = notes.value.filter(x => x.id !== n.id); } catch (e) { K.fail(e.message); } };
+    const shown = computed(() => route.who === 'mine' ? notes.value.filter(n => n.mine) : notes.value);
+    return { people, loading, draft, saving, fresh, live, add, remove, shown };
+  }
+});
 </script>
 </body>
 </html>

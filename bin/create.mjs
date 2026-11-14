@@ -2,13 +2,15 @@
 // kasion framework — create a new app from template/.
 //   node bin/create.mjs <app_name> [--title "My App"] [--domain app.kasion.dev] [--accent "#00A85A"]
 //                                  [--admin you@gmail.com] [--dir /path/to/parent] [--provision] [--no-git]
+//                                  [--with profile,safety,feed,rooms,people,invites,admin,wallet,maps | --with all]
 // --provision also creates the D1 database, applies migrations (local + remote) and builds the icons.
-import fs from 'fs'; import path from 'path'; import { execFileSync, spawnSync } from 'child_process';
+import fs from 'fs'; import path from 'path'; import { spawnSync } from 'child_process';
+import { addFeature, writeState, listFeatures } from './lib.mjs';
 const here = path.dirname(new URL(import.meta.url).pathname);
 const args = process.argv.slice(2);
 const flag = (n, d = null) => { const i = args.indexOf('--' + n); return i >= 0 ? (args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : true) : d; };
 const name = args[0]; // the app name comes first
-if (!name || name.startsWith('--') || !/^[a-z][a-z0-9_]{1,40}$/.test(name)) { console.error('usage: node bin/create.mjs <app_name>   (snake_case, e.g. kasion_notes)\n       [--title "My App"] [--domain app.kasion.dev] [--accent "#00A85A"] [--admin you@gmail.com] [--dir <parent>] [--provision] [--no-git]'); process.exit(1); }
+if (!name || name.startsWith('--') || !/^[a-z][a-z0-9_]{1,40}$/.test(name)) { console.error('usage: node bin/create.mjs <app_name>   (snake_case, e.g. kasion_notes)\n       [--title "My App"] [--domain app.kasion.dev] [--accent "#00A85A"] [--admin you@gmail.com] [--dir <parent>]\n       [--with feed,rooms,… | --with all] [--provision] [--no-git]'); process.exit(1); }
 const title = flag('title', name.replace(/_/g, ' '));
 const short = name.replace(/^kasion_/, '');
 const domain = flag('domain', short.replace(/_/g, '-') + '.kasion.dev');
@@ -38,7 +40,12 @@ for (const f of walk(dest)) {
 fs.copyFileSync(path.join(dest, '.dev.vars.example'), path.join(dest, '.dev.vars'));
 const fwVersion = JSON.parse(fs.readFileSync(path.join(here, '..', 'package.json'), 'utf8')).version;
 fs.writeFileSync(path.join(dest, 'src', 'core', 'VERSION'), 'kasion_framework ' + fwVersion + '\n');
+writeState(dest, { features: [] });
 console.log('✓ created ' + dest);
+const withArg = flag('with', '');
+const wanted = withArg === true || !withArg ? [] : (withArg === 'all' ? listFeatures().map((f) => f.name) : String(withArg).split(',').map((x) => x.trim()).filter(Boolean));
+// profile and safety first: they provide services (names, blocks) the others pick up
+for (const n of [...wanted].sort((a, b) => ['profile', 'safety'].indexOf(b) - ['profile', 'safety'].indexOf(a))) { try { console.log(addFeature(dest, n, vars).join('\n')); } catch (e) { console.log('! ' + e.message); } }
 const run = (cmd, a, o = {}) => spawnSync(cmd, a, { cwd: dest, encoding: 'utf8', ...o });
 if (process.platform === 'darwin') { const r = run('sh', ['scripts/make_icons.sh']); console.log(r.status === 0 ? '✓ icons built' : '! icons not built (run: npm run icons)'); }
 if (!flag('no-git')) { run('git', ['init', '-q', '-b', 'main']); console.log('✓ git initialised (nothing committed)'); }

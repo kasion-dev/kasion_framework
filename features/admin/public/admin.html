@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>ผู้ดูแลระบบ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/vendor/vant.css">
+<script src="/app.config.js"></script>
+<script src="/kasion.js"></script>
+<script src="/vendor/vue.js"></script>
+<script src="/vendor/vant.js"></script>
+<script src="/kasion.vue.js"></script>
+<style>
+.kpi{background:#fff;border:1px solid var(--kd-line);border-radius:16px;padding:12px 14px;min-width:0}.kpi b{display:block;font-size:24px;font-weight:800;line-height:1.2}.kpi span{font-size:12px;color:var(--kd-mute);font-weight:600}.kpi small{display:block;font-size:11px;color:var(--kd-mute);margin-top:2px}
+.sec{font-size:13px;font-weight:800;color:var(--kd-mute);margin:16px 2px 8px}
+.bars{display:flex;align-items:flex-end;gap:5px;height:90px}.bars i{flex:1;background:var(--kd-accent);border-radius:4px 4px 0 0;min-height:3px;opacity:.85}
+.card{padding:12px 14px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div id="app" class="k-app" v-cloak>
+  <k-page title="ผู้ดูแลระบบ" back="/">
+    <template #right><van-icon name="replay" size="20" role="button" tabindex="0" aria-label="รีเฟรช" @click="load"></van-icon></template>
+    <template #header><van-tabs v-if="me.admin" v-model:active="route.tab" style="flex-shrink: 0"><van-tab title="สถิติ" name="stats"></van-tab><van-tab :title="'รายงาน' + (ov && ov.openReports ? ' (' + ov.openReports + ')' : '')" name="reports"></van-tab><van-tab title="เนื้อหา" name="content"></van-tab><van-tab title="ผู้ใช้" name="users"></van-tab></van-tabs></template>
+    <k-empty v-if="!me.admin" title="บัญชีนี้ไม่มีสิทธิ์ผู้ดูแล" text="เข้าสู่ระบบด้วยบัญชีที่อยู่ใน ADMIN_EMAILS แล้วลองใหม่"></k-empty>
+    <div v-else class="k-pad">
+      <div v-if="loading" class="k-center"><van-loading size="28"></van-loading></div>
+      <template v-else-if="route.tab === 'stats' && ov">
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+          <div class="kpi"><b>{{ ov.returnTotal ? Math.round(100 * ov.returnBack / ov.returnTotal) + '%' : '–' }}</b><span>กลับมาวันถัดไป</span><small>{{ ov.returnTotal ? ov.returnBack + ' จาก ' + ov.returnTotal + ' คน' : 'ยังไม่มีข้อมูล' }}</small></div>
+          <div class="kpi"><b>{{ ov.onlineNow }}</b><span>ออนไลน์ตอนนี้</span><small>24 ชม. {{ ov.active24h }} คน</small></div>
+          <div class="kpi"><b>{{ ov.users }}</b><span>บัญชีทั้งหมด</span><small>วันนี้ +{{ ov.newToday }} · 7 วัน +{{ ov.new7d }}</small></div>
+          <div class="kpi"><b>{{ ov.dms24h }}</b><span>แชตส่วนตัว 24 ชม.</span></div>
+          <div class="kpi"><b>{{ ov.pushDevices }}</b><span>เครื่องที่เปิดแจ้งเตือน</span></div>
+          <div class="kpi"><b>{{ ov.openReports == null ? '–' : ov.openReports }}</b><span>รายงานค้าง</span></div>
+        </div>
+        <div class="sec">สมัครใหม่ 14 วัน</div>
+        <div class="k-card card"><div v-if="ov.signups.length" class="bars" role="img" :aria-label="'สมัครใหม่รายวัน: ' + ov.signups.map(d => d.d + ' ' + d.n + ' คน').join(', ')"><i v-for="d in ov.signups" :key="d.d" :style="{ height: Math.round(100 * d.n / maxSign) + '%' }" :title="d.d + ': ' + d.n"></i></div><div v-else style="font-size: 13px; color: var(--kd-mute)">ยังไม่มีข้อมูล</div></div>
+      </template>
+      <template v-else-if="route.tab === 'reports'">
+        <k-empty v-if="!reports.installed" title="ยังไม่ได้ติดตั้งระบบรายงาน" text="รัน: kasion add safety"></k-empty>
+        <k-empty v-else-if="!reports.reports.length" title="ไม่มีรายงานค้าง"></k-empty>
+        <div v-for="r in reports.reports" :key="r.id" class="k-card card">
+          <div style="font-size: 12px; color: var(--kd-mute)">{{ timeAgo(r.at) }} · โดย {{ r.by.name || 'ไม่ทราบชื่อ' }}<b v-if="r.target.blocked" style="color: #B42318"> · ระงับแล้ว</b></div>
+          <div style="font-weight: 800; margin-top: 4px">{{ r.target.name || r.target.uid }} <span style="font-weight: 600; color: var(--kd-accent-ink)">· {{ r.reason }}</span></div>
+          <div v-if="r.detail" style="font-size: 13px; color: var(--kd-mute); margin-top: 4px; word-break: break-word">{{ r.detail }}</div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px"><van-button size="small" round type="danger" plain @click="ban(r.target.uid, !r.target.blocked, r.target.name)">{{ r.target.blocked ? 'ปลดระงับ' : 'ระงับบัญชี' }}</van-button><van-button size="small" round type="primary" @click="resolve(r)">ปิดเรื่อง</van-button></div>
+        </div>
+      </template>
+      <template v-else-if="route.tab === 'content'">
+        <k-empty v-if="!groups.length" title="ยังไม่มีเนื้อหาให้ดูแล" text="ฟีเจอร์อย่าง feed และ rooms จะแสดงเนื้อหาที่นี่"></k-empty>
+        <template v-for="g in groups" :key="g.kind"><div class="sec">{{ g.label }}</div>
+          <div v-for="it in g.items" :key="it.id" class="k-card card"><div style="font-size: 12px; color: var(--kd-mute)">{{ it.name || 'ไม่ทราบชื่อ' }} · {{ timeAgo(it.at) }}{{ it.room ? ' · ห้อง ' + it.room : '' }}</div><div style="font-size: 14px; margin-top: 4px; word-break: break-word">{{ it.text || (it.img ? '[รูปภาพ]' : '') }}</div><img v-if="it.img" :src="it.img" alt="" data-preview="1" style="max-height: 110px; border-radius: 10px; margin-top: 8px; display: block; cursor: zoom-in"><div style="display: flex; gap: 8px; margin-top: 8px"><van-button size="small" round type="danger" plain @click="removeContent(g.kind, it.id)">ลบ</van-button><van-button size="small" round @click="ban(it.uid, true, it.name)">ระงับผู้โพสต์</van-button></div></div>
+        </template>
+      </template>
+      <template v-else-if="route.tab === 'users'">
+        <van-search v-model="q" placeholder="ค้นหาชื่อหรืออีเมล" @search="load" shape="round" style="padding: 0 0 10px; background: none"></van-search>
+        <div v-for="u in users" :key="u.uid" class="k-card card" style="display: flex; align-items: center; gap: 10px"><k-avatar :src="u.photo" :name="u.name" :size="42"></k-avatar><div style="flex: 1; min-width: 0"><div style="font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ u.name || 'ยังไม่ตั้งชื่อ' }}<span v-if="u.blocked" style="color: #B42318"> · ระงับ</span></div><div style="font-size: 12px; color: var(--kd-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ [u.email, 'ใช้งาน ' + timeAgo(u.lastSeen)].filter(Boolean).join(' · ') }}</div></div><van-button size="small" round :type="u.blocked ? 'default' : 'danger'" plain @click="ban(u.uid, !u.blocked, u.name)">{{ u.blocked ? 'ปลดระงับ' : 'ระงับ' }}</van-button></div>
+      </template>
+    </div>
+  </k-page>
+</div>
+<script>
+K.page({ route: { tab: 'stats' }, setup({ me, route }) {
+  const { ref, computed, watch } = Vue;
+  const loading = ref(true), ov = ref(null), reports = ref({ installed: true, reports: [] }), groups = ref([]), users = ref([]), q = ref('');
+  const load = async () => {
+    if (!me.admin) { loading.value = false; return; }
+    loading.value = true;
+    try {
+      ov.value = await api('/api/admin/overview');
+      if (route.tab === 'reports') reports.value = await api('/api/admin/reports');
+      else if (route.tab === 'content') groups.value = (await api('/api/admin/content')).groups;
+      else if (route.tab === 'users') users.value = (await api('/api/admin/users?q=' + encodeURIComponent(q.value))).users;
+    } catch (e) { K.fail(e.message); }
+    loading.value = false;
+  };
+  K.onLoad(load); watch(() => route.tab, load);
+  return { loading, ov, reports, groups, users, q, load, maxSign: computed(() => Math.max(1, ...((ov.value && ov.value.signups) || []).map(d => d.n))),
+    ban: async (uid, on, name) => { if (!(await K.confirm((on ? 'ระงับบัญชี ' : 'ปลดระงับ ') + (name || uid) + '?'))) return; try { await api('/api/admin/users/' + encodeURIComponent(uid) + '/ban', { method: 'POST', body: { blocked: on } }); K.ok(on ? 'ระงับแล้ว' : 'ปลดระงับแล้ว'); load(); } catch (e) { K.fail(e.message); } },
+    resolve: async (r) => { try { await api('/api/admin/reports/' + r.id + '/resolve', { method: 'POST' }); load(); } catch (e) { K.fail(e.message); } },
+    removeContent: async (kind, id) => { if (!(await K.confirm('ลบรายการนี้ถาวร?'))) return; try { await api('/api/admin/content/' + kind + '/' + id, { method: 'DELETE' }); K.ok('ลบแล้ว'); load(); } catch (e) { K.fail(e.message); } } };
+} });
+</script>
+</body>
+</html>

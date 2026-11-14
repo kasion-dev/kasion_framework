@@ -5,6 +5,7 @@ import { images } from './core/images.js';
 import { push } from './core/push.js';
 import { chat } from './core/chat.js';
 import { calls } from './core/calls.js';
+// kasion:imports (features added by `kasion add` are imported above this line)
 export { Hub } from './core/hub.js';
 
 const app = createApp({
@@ -19,6 +20,7 @@ app.use(images());   // /api/images
 app.use(push());     // /api/push/*, /api/public/push-key
 app.use(chat());     // /api/chat/*   (direct messages + receipts)
 app.use(calls());    // /api/calls/*, /api/agora-token
+// kasion:plugins (features added by `kasion add` are registered above this line)
 
 // ---- people you can message (starter: everyone who has signed in) ----
 app.get('/api/users', async (c) => {

@@ -16,6 +16,11 @@ import { pushUser } from './push.js';
 export function createApp(cfg = {}) {
   const project = cfg.firebaseProject || 'kasion-dev';
   const routes = [];
+  // Things features share with each other without importing one another:
+  const services = {};        // name → fn, e.g. 'profileOf', 'hidden'
+  const channelRules = [];    // (c, name) → true to allow joining a realtime channel
+  const meHooks = [];         // (c, user) → extra fields for POST /api/me
+  const adminContent = [];    // { kind, label, list(c), remove(c, id) } shown in the admin "content" tab
   const add = (method, pattern, handler, opts = {}) => {
     const keys = [];
     const re = new RegExp('^' + pattern.replace(/:[a-zA-Z_]+/g, (k) => { keys.push(k.slice(1)); return '([^/]+)'; }) + '$');
@@ -29,6 +34,18 @@ export function createApp(cfg = {}) {
     // WebSocket route: handler(c) must return a Response (usually a Hub fetch).
     ws: (p, h, o) => add('GET', p, h, { ...o, ws: true }),
     use(plugin) { plugin(app, cfg); return app; },
+    // Feature wiring ---------------------------------------------------------------------------------------------
+    // provide('profileOf', async (c, uid) => ({ name, photo })) — later providers replace earlier ones.
+    provide(name, fn) { services[name] = fn; return app; },
+    // service('hidden') → the registered fn, or the given default.
+    service(name, fallback) { return services[name] || fallback; },
+    // allowChannel((c, name) => name === 'feed') — who may open /api/live/<name>/ws
+    allowChannel(fn) { channelRules.push(fn); return app; },
+    // onMe(async (c, user) => ({ profile })) — merged into the POST /api/me response
+    onMe(fn) { meHooks.push(fn); return app; },
+    // adminContent({ kind: 'post', label: 'โพสต์', list: async (c) => [{ id, uid, name, text, img, at }], remove: async (c, id) => {} })
+    adminContent(def) { adminContent.push(def); return app; },
+    adminContents: () => adminContent,
 
     async fetch(req, env, ctx) {
       const url = new URL(req.url);
@@ -70,6 +87,11 @@ export function createApp(cfg = {}) {
       // realtime first, Web Push when that user has no open socket (app closed). note = { title, body, url, tag, icon }
       notify: async (uid, payload, note) => { const n = await hubPush(env, uid, payload); if (!n && note) await pushUser(env, uid, note); return n; },
       isAdmin: () => isAdmin(env, c.claims, cfg.adminVar),
+      // shared services with safe defaults
+      profileOf: async (uid) => { const f = services.profileOf; if (f) { const p = await f(c, uid); if (p) return p; } const u = await db.prepare('SELECT name, photo FROM users WHERE uid = ?').bind(uid).first(); return u || { name: 'ผู้ใช้', photo: null }; },
+      // uids whose content I must not see and who must not see mine (blocks). [] when no safety feature is installed.
+      hidden: async () => (c._hidden ||= services.hidden ? await services.hidden(c) : []),
+      service: (name, fallback) => services[name] || fallback,
     };
     route.keys.forEach((k, i) => { c.params[k] = dec(match[i + 1]); });
     const o = route.opts;
@@ -100,7 +122,8 @@ export function createApp(cfg = {}) {
     const u = await c.db.prepare('SELECT * FROM users WHERE uid = ?').bind(c.me).first();
     if (u.blocked) throw new HttpError(403, 'บัญชีนี้ถูกระงับการใช้งาน');
     c.user = u;
-    const extra = cfg.onMe ? (await cfg.onMe(c, u)) || {} : {};
+    let extra = cfg.onMe ? (await cfg.onMe(c, u)) || {} : {};
+    for (const h of meHooks) extra = { ...extra, ...((await h(c, u)) || {}) };
     return c.json({ user: { uid: u.uid, name: u.name, email: u.email, photo: u.photo }, admin: c.isAdmin(), ...extra });
   }, { noUser: true });
   // The signed-in user's own socket (all their tabs/devices).
@@ -108,7 +131,9 @@ export function createApp(cfg = {}) {
   // Shared channel socket. cfg.channels(c, name) decides who may join which channel (default: nobody).
   app.ws('/api/live/:chan/ws', async (c) => {
     const name = c.params.chan;
-    if (!/^[a-z0-9:_-]{1,40}$/.test(name) || !cfg.channels || !(await cfg.channels(c, name))) throw new HttpError(404, 'channel not found');
+    let allowed = /^[a-z0-9:_-]{1,40}$/.test(name) && !!cfg.channels && !!(await cfg.channels(c, name));
+    if (!allowed && /^[a-z0-9:_-]{1,40}$/.test(name)) for (const rule of channelRules) { if (await rule(c, name)) { allowed = true; break; } }
+    if (!allowed) throw new HttpError(404, 'channel not found');
     return env_hub(c.env, 'ch:' + name).fetch(new Request('https://hub/ws?count=1&uid=' + encodeURIComponent(c.me), c.req));
   });
   const env_hub = (env, name) => env.HUB.get(env.HUB.idFromName(name));

@@ -1,0 +1,6 @@
+{
+  "title": "บล็อกและรายงานผู้ใช้",
+  "use": "app.use(safety());",
+  "notes": "Provides hidden: every other feature hides blocked pairs automatically. Install BEFORE feed/rooms/people in worker.js order does not matter.",
+  "name": "safety"
+}

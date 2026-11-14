@@ -1,0 +1,13 @@
+{
+  "title": "โปรไฟล์ผู้ใช้ + หน้าแนะนำตัวครั้งแรก",
+  "use": "app.use(profile());",
+  "tab": [
+    "profile",
+    "โปรไฟล์",
+    "/profile",
+    "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20a8 8 0 0 1 16 0"
+  ],
+  "config": "setup: { needed: me => !me.profile || !me.profile.complete, url: '/profile' },",
+  "notes": "Provides profileOf: chat, calls, feed and rooms show the profile name/photo. /user?id= shows a member.",
+  "name": "profile"
+}

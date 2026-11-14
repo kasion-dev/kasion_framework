@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>ออนไลน์</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/vendor/vant.css">
+<script src="/app.config.js"></script>
+<script src="/kasion.js"></script>
+<script src="/vendor/vue.js"></script>
+<script src="/vendor/vant.js"></script>
+<script src="/kasion.vue.js"></script>
+<style>
+.sec{display:flex;justify-content:space-between;font-size:14px;font-weight:800;margin:4px 4px 10px}.sec small{font-size:12px;color:var(--kd-mute);font-weight:700}
+</style>
+</head>
+<body>
+<div id="app" class="k-app" v-cloak>
+  <k-page title="ออนไลน์" tab="people">
+    <template #header>
+      <van-tabs v-model:active="route.loc" style="flex-shrink: 0"><van-tab title="ทุกที่" name="all"></van-tab><van-tab :title="locating ? 'กำลังหาตำแหน่ง…' : 'ใกล้ฉัน'" name="near"></van-tab></van-tabs>
+    </template>
+    <div class="k-pad">
+      <div v-if="loading" class="k-center"><van-loading size="28"></van-loading></div>
+      <template v-else>
+        <k-empty v-if="!online.length" :title="route.loc === 'near' ? 'ยังไม่มีใครออนไลน์ใกล้คุณ' : 'ตอนนี้ยังไม่มีใครออนไลน์'" text="ลองกลับมาใหม่อีกครั้ง หรือชวนเพื่อนเข้ามา"></k-empty>
+        <template v-else><div class="sec">ออนไลน์ตอนนี้<small>{{ online.length }} คน</small></div>
+          <van-cell-group inset style="margin: 0 0 16px"><van-cell v-for="u in online" :key="u.uid" center :title="u.name" :label="sub(u, true)" @click="go('/user?id=' + encodeURIComponent(u.uid))" clickable>
+            <template #icon><k-avatar :src="u.photo" :name="u.name" :size="46" online style="margin-right: 12px"></k-avatar></template>
+            <template #right-icon><van-button type="primary" size="small" round @click.stop="go('/chat?with=m_' + encodeURIComponent(u.uid))">ทักแชต</van-button></template>
+          </van-cell></van-cell-group></template>
+        <template v-if="recent.length"><div class="sec">เพิ่งใช้งาน<small>ใน 24 ชั่วโมง</small></div>
+          <van-cell-group inset style="margin: 0"><van-cell v-for="u in recent" :key="u.uid" center :title="u.name" :label="sub(u, false)" @click="go('/user?id=' + encodeURIComponent(u.uid))" clickable>
+            <template #icon><k-avatar :src="u.photo" :name="u.name" :size="46" style="margin-right: 12px"></k-avatar></template>
+            <template #right-icon><van-button size="small" round plain type="primary" @click.stop="go('/chat?with=m_' + encodeURIComponent(u.uid))">ทักแชต</van-button></template>
+          </van-cell></van-cell-group></template>
+      </template>
+    </div>
+  </k-page>
+</div>
+<script>
+const NEAR_KM = 30;
+K.page({ route: { loc: 'all' }, setup({ route }) {
+  const { ref, computed, watch } = Vue;
+  const all = ref({ online: [], recent: [], hasLocation: false }), loading = ref(true), locating = ref(false);
+  const load = K.onLoad(async () => { all.value = await api('/api/people'); loading.value = false; });
+  const t = setInterval(() => { if (!document.hidden) load().catch(() => {}); }, 20000);
+  Vue.onBeforeUnmount(() => clearInterval(t));
+  // "near me" needs my position once: ask the browser, save a ~1 km rounded point, reload distances
+  watch(() => route.loc, (v) => {
+    if (v !== 'near' || all.value.hasLocation || locating.value) return;
+    if (!navigator.geolocation) { K.toast('อุปกรณ์นี้ไม่รองรับการระบุตำแหน่ง'); route.loc = 'all'; return; }
+    locating.value = true;
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      try { await api('/api/location', { method: 'POST', body: { lat: pos.coords.latitude, lng: pos.coords.longitude } }); await load(); K.toast('ใช้ตำแหน่งของคุณแล้ว · คนอื่นเห็นแค่ระยะทางโดยประมาณ'); } catch (e) { K.fail(e.message); route.loc = 'all'; }
+      locating.value = false;
+    }, (err) => { locating.value = false; route.loc = 'all'; K.toast(err.code === 1 ? 'ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง' : 'หาตำแหน่งไม่ได้ ลองใหม่อีกครั้ง'); }, { timeout: 10000, maximumAge: 600000 });
+  });
+  const keep = (u) => route.loc !== 'near' || (u.distanceKm != null && u.distanceKm <= NEAR_KM);
+  const byDist = (a, b) => (a.distanceKm ?? 1e9) - (b.distanceKm ?? 1e9);
+  return { loading, locating,
+    online: computed(() => all.value.online.filter(keep).sort(byDist)), recent: computed(() => all.value.recent.filter(keep).sort(byDist)),
+    sub: (u, on) => [u.distanceKm != null ? 'ห่าง ' + u.distanceKm + ' กม.' : '', on ? '' : 'ใช้งานเมื่อ ' + timeAgo(u.lastSeen), u.city].filter(Boolean).join(' · ') || (on ? 'ออนไลน์อยู่' : '') };
+} });
+</script>
+</body>
+</html>

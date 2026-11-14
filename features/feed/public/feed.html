@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>กระดาน</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/vendor/vant.css">
+<script src="/app.config.js"></script>
+<script src="/kasion.js"></script>
+<script src="/vendor/vue.js"></script>
+<script src="/vendor/vant.js"></script>
+<script src="/kasion.vue.js"></script>
+<style>
+.post{padding:14px;margin-bottom:10px}
+.act{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 10px;border:0;background:none;color:var(--kd-mute);font-size:13px;font-weight:700;font-family:inherit;border-radius:17px}
+.act.on{color:var(--kd-accent)}
+.reply{display:flex;gap:8px;margin-bottom:10px}.reply>div{flex:1;min-width:0;background:var(--kd-bg);border-radius:14px;padding:8px 12px}
+.hero{border-radius:20px;padding:22px 18px;margin-bottom:12px;color:#fff;background:linear-gradient(140deg,var(--kd-accent),var(--kd-accent-ink))}
+</style>
+</head>
+<body>
+<div id="app" class="k-app" v-cloak>
+  <k-page title="กระดาน" tab="feed">
+    <template #right><van-tag v-if="!guest" round type="success" size="medium">{{ live.count.value }} คนกำลังดู</van-tag></template>
+    <div class="k-pad" ref="scroller">
+      <div v-if="guest" class="hero">
+        <div style="font-size: 21px; font-weight: 800; line-height: 1.3">มาร่วมวงคุยกัน</div>
+        <div style="font-size: 14px; opacity: .95; margin-top: 6px">อ่านโพสต์ได้เลย เข้าสู่ระบบเพื่อโพสต์ ถูกใจ และตอบ</div>
+        <van-button round block style="margin-top: 16px; color: var(--kd-accent-ink); font-weight: 800" @click="login">เข้าใช้งานฟรี</van-button>
+      </div>
+      <div v-else class="k-card" style="padding: 12px; margin-bottom: 12px">
+        <van-field v-model="draft" type="textarea" rows="1" autosize maxlength="500" placeholder="วันนี้เป็นยังไงบ้าง เล่าให้ฟังหน่อย" aria-label="เขียนโพสต์" style="padding: 4px 0"></van-field>
+        <div v-if="img" style="position: relative; display: inline-block; margin-top: 8px"><img :src="img" alt="รูปที่แนบ" style="max-height: 140px; border-radius: 12px; display: block"><van-icon name="clear" size="22" color="#000" style="position: absolute; top: 4px; right: 4px; opacity: .7" role="button" aria-label="เอารูปออก" @click="img = ''"></van-icon></div>
+        <div style="display: flex; align-items: center; margin-top: 8px"><van-button size="small" round icon="photo-o" @click="attach">รูป</van-button><span style="flex: 1"></span><van-button type="primary" size="small" round :loading="posting" @click="post" style="padding: 0 18px">โพสต์</van-button></div>
+      </div>
+      <van-button v-if="fresh.length" type="primary" size="small" round block style="margin-bottom: 10px" @click="showFresh">โพสต์ใหม่ {{ fresh.length }} รายการ</van-button>
+      <div v-if="loading" class="k-center"><van-loading size="28"></van-loading></div>
+      <k-empty v-else-if="!posts.length" title="กระดานยังเงียบอยู่" text="เป็นคนแรกที่โพสต์ทักทายทุกคนเลย"></k-empty>
+      <article v-for="p in posts" :key="p.id" class="k-card post" :class="{ 'k-new': p.id === newId }">
+        <div style="display: flex; gap: 10px; align-items: center">
+          <a :href="p.author.uid ? '/user?id=' + encodeURIComponent(p.author.uid) : null"><k-avatar :src="p.author.photo" :name="p.author.name" :size="42" :online="p.author.online"></k-avatar></a>
+          <div style="flex: 1; min-width: 0"><div style="font-weight: 800; font-size: 15px">{{ p.author.name }}</div><div style="font-size: 12px; color: var(--kd-mute)">{{ timeAgo(p.at) }}</div></div>
+          <van-icon v-if="!guest && !p.mine" name="chat-o" size="20" color="var(--kd-accent)" role="link" tabindex="0" :aria-label="'ทักแชต ' + p.author.name" @click="go('/chat?with=m_' + encodeURIComponent(p.author.uid))"></van-icon>
+          <van-icon name="ellipsis" size="20" color="#8A948F" role="button" tabindex="0" aria-label="ตัวเลือกของโพสต์" @click="menu = p"></van-icon>
+        </div>
+        <div v-if="p.text" style="font-size: 15px; line-height: 1.55; margin-top: 10px; white-space: pre-wrap; word-break: break-word">{{ p.text }}</div>
+        <img v-if="p.img" :src="p.img" alt="รูปในโพสต์" data-preview="1" loading="lazy" style="display: block; width: 100%; max-height: 320px; object-fit: cover; border-radius: 12px; margin-top: 10px; cursor: zoom-in">
+        <div style="margin-top: 6px">
+          <button class="act" :class="{ on: p.liked }" :aria-pressed="!!p.liked" :aria-label="(p.liked ? 'เลิกถูกใจ' : 'ถูกใจ') + ' · ' + p.likes" @click="like(p)"><van-icon :name="p.liked ? 'like' : 'like-o'" size="19"></van-icon>{{ p.likes || '' }}</button>
+          <button class="act" :aria-expanded="!!open[p.id]" :aria-label="'ความคิดเห็น ' + p.replies" @click="toggle(p)"><van-icon name="comment-o" size="19"></van-icon>{{ p.replies || '' }}</button>
+        </div>
+        <div v-if="open[p.id]" style="margin-top: 8px; padding-top: 10px; border-top: 1px solid #F0F2F1">
+          <div v-if="!replies[p.id]" style="font-size: 13px; color: var(--kd-mute); padding-bottom: 8px">กำลังโหลดความคิดเห็น…</div>
+          <div v-for="r in replies[p.id] || []" :key="r.id" class="reply"><k-avatar :src="r.author.photo" :name="r.author.name" :size="30"></k-avatar><div><div style="font-size: 13px; font-weight: 800">{{ r.author.name }} <span style="font-weight: 600; color: var(--kd-mute); font-size: 12px">· {{ timeAgo(r.at) }}</span></div><div style="font-size: 14px; line-height: 1.5; word-break: break-word">{{ r.text }}</div></div></div>
+          <van-field v-model="replyDraft[p.id]" maxlength="300" placeholder="เขียนความคิดเห็น…" aria-label="เขียนความคิดเห็น" enterkeyhint="send" @keydown.enter.prevent="reply(p)" style="background: var(--kd-bg); border-radius: 20px; padding: 6px 12px"><template #button><van-button type="primary" size="mini" round @click="reply(p)">ส่ง</van-button></template></van-field>
+        </div>
+      </article>
+      <van-button v-if="more && posts.length" block round :loading="loadingMore" @click="loadMore">ดูโพสต์ก่อนหน้า</van-button>
+    </div>
+  </k-page>
+  <van-action-sheet :show="!!menu" :actions="menuActions" cancel-text="ยกเลิก" close-on-click-action @select="onMenu" @update:show="v => { if (!v) menu = null }"></van-action-sheet>
+</div>
+<script>
+K.page({
+  auth: 'optional',                              // signed-out visitors can read
+  setup({ guest, user }) {
+    const { ref, reactive, computed } = Vue;
+    const posts = ref([]), loading = ref(true), more = ref(false), loadingMore = ref(false), draft = ref(''), img = ref(''), posting = ref(false);
+    const open = reactive({}), replies = reactive({}), replyDraft = reactive({}), fresh = ref([]), newId = ref(''), menu = ref(null), scroller = ref(null);
+    const login = () => { location.href = '/login?next=' + encodeURIComponent('/feed'); };
+    const load = K.onLoad(async () => {
+      if (guest) { posts.value = (await fetch('/api/public/feed').then(r => r.json())).posts || []; }
+      else { const d = await api('/api/feed'); posts.value = d.posts; more.value = d.more; fresh.value = []; }
+      loading.value = false;
+    });
+    const live = guest ? { count: ref(0), connected: ref(false) } : K.live('feed', {
+      post(ev) {
+        if (ev.by === user.uid || posts.value.some(x => x.id === ev.post.id) || fresh.value.some(x => x.id === ev.post.id)) return;
+        const sc = scroller.value && scroller.value.parentElement, typing = document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName);
+        // reading further down or typing: hold new posts behind a button instead of moving the page
+        if ((sc && sc.scrollTop > 120) || typing) fresh.value.unshift(ev.post); else { newId.value = ev.post.id; posts.value.unshift(ev.post); }
+      },
+      post_like(ev) { const p = posts.value.find(x => x.id === ev.id); if (p) p.likes = ev.likes; },
+      post_reply(ev) { const p = posts.value.find(x => x.id === ev.id); if (!p) return; p.replies = ev.replies; if (ev.by !== user.uid && replies[ev.id] && !replies[ev.id].some(x => x.id === ev.reply.id)) replies[ev.id].push(ev.reply); },
+      post_deleted(ev) { posts.value = posts.value.filter(x => x.id !== ev.id); },
+    }, load);
+    const need = () => { if (guest) { K.toast('เข้าสู่ระบบเพื่อร่วมวงกัน'); setTimeout(login, 700); return true; } return false; };
+    return {
+      posts, loading, more, loadingMore, draft, img, posting, open, replies, replyDraft, fresh, newId, menu, scroller, live, login,
+      attach: async () => { const r = await K.pickImage('uploads'); if (r && r.url) img.value = r.url; },
+      post: async () => {
+        if (need() || posting.value) return;
+        const text = draft.value.trim(); if (!text && !img.value) return K.toast('พิมพ์ข้อความก่อนโพสต์');
+        posting.value = true;
+        try { const d = await api('/api/feed', { method: 'POST', body: { text, img: img.value || null } }); draft.value = ''; img.value = ''; newId.value = d.post.id; posts.value.unshift(d.post); sfx.play('send', .8); }
+        catch (e) { K.fail(e.message); }
+        posting.value = false;
+      },
+      showFresh: () => { posts.value = fresh.value.concat(posts.value); fresh.value = []; const sc = scroller.value && scroller.value.parentElement; if (sc) sc.scrollTo({ top: 0, behavior: 'smooth' }); },
+      like: async (p) => { if (need()) return; const was = p.liked; p.liked = !was; p.likes = Math.max(0, p.likes + (was ? -1 : 1)); try { const d = await api('/api/feed/' + p.id + '/like', { method: 'POST' }); p.liked = d.liked; p.likes = d.likes; } catch (e) { p.liked = was; K.fail(e.message); } },
+      toggle: async (p) => { if (need()) return; open[p.id] = !open[p.id]; if (open[p.id] && !replies[p.id]) { try { replies[p.id] = (await api('/api/feed/' + p.id + '/replies')).replies; } catch (e) { replies[p.id] = []; } } },
+      reply: async (p) => { const text = (replyDraft[p.id] || '').trim(); if (!text || need()) return; try { const d = await api('/api/feed/' + p.id + '/replies', { method: 'POST', body: { text } }); (replies[p.id] = replies[p.id] || []).push(d.reply); p.replies = d.replies; replyDraft[p.id] = ''; sfx.play('send', .7); } catch (e) { K.fail(e.message); } },
+      loadMore: async () => { loadingMore.value = true; try { const last = posts.value[posts.value.length - 1]; const d = await api('/api/feed?before=' + last.at); const have = new Set(posts.value.map(x => x.id)); posts.value.push(...d.posts.filter(x => !have.has(x.id))); more.value = d.more; } catch (e) {} loadingMore.value = false; },
+      menuActions: computed(() => !menu.value ? [] : [{ name: 'แชร์โพสต์นี้', key: 'share' }].concat(menu.value.mine ? [{ name: 'ลบโพสต์นี้', key: 'del', color: '#C92A2A' }] : guest ? [] : [{ name: 'รายงานโพสต์นี้', key: 'report' }])),
+      onMenu: async (a) => {
+        const p = menu.value; menu.value = null; if (!p) return;
+        if (a.key === 'share') return shareLink(location.origin + '/feed', KASION.name, (p.text || '').slice(0, 80));
+        if (a.key === 'del') { if (!(await K.confirm('ลบโพสต์นี้?'))) return; try { await api('/api/feed/' + p.id, { method: 'DELETE' }); posts.value = posts.value.filter(x => x.id !== p.id); } catch (e) { K.fail(e.message); } }
+        if (a.key === 'report') { try { await api('/api/report', { method: 'POST', body: { target: p.author.uid, reason: 'โพสต์ไม่เหมาะสม', detail: 'post:' + p.id + ' ' + (p.text || '').slice(0, 200) } }); K.ok('ส่งรายงานแล้ว'); } catch (e) { K.fail(e.status === 404 ? 'ยังไม่ได้ติดตั้งระบบรายงาน (kasion add safety)' : e.message); } }
+      },
+    };
+  }
+});
+</script>
+</body>
+</html>

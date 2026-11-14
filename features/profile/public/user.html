@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>โปรไฟล์</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/vendor/vant.css">
+<script src="/app.config.js"></script>
+<script src="/kasion.js"></script>
+<script src="/vendor/vue.js"></script>
+<script src="/vendor/vant.js"></script>
+<script src="/kasion.vue.js"></script>
+<style>
+.hero{position:relative;height:52%;min-height:320px;background:#2a2327 center/cover;flex-shrink:0}
+.bars{position:absolute;top:10px;left:12px;right:12px;display:flex;gap:4px}.bars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.4)}.bars i.on{background:#fff}
+.rb{position:absolute;top:20px;width:42px;height:42px;border-radius:21px;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;color:#fff;border:0}
+</style>
+</head>
+<body>
+<div id="app" class="k-app" v-cloak>
+  <div v-if="loading" class="k-center" style="flex: 1"><van-loading size="28"></van-loading></div>
+  <k-empty v-else-if="!p" title="ไม่พบโปรไฟล์นี้" text="โปรไฟล์อาจถูกซ่อนหรือไม่พร้อมใช้งานแล้ว" style="flex: 1"><van-button type="primary" round @click="back">ย้อนกลับ</van-button></k-empty>
+  <template v-else>
+    <main class="k-scroll" style="display: flex; flex-direction: column">
+      <div class="hero" :style="{ backgroundImage: 'url(' + JSON.stringify(photos[pi] || '/icon.svg') + ')' }" @click="flip">
+        <div v-if="photos.length > 1" class="bars"><i v-for="(x, i) in photos" :key="i" :class="{ on: i === pi }"></i></div>
+        <button class="rb" style="left: 12px" aria-label="ย้อนกลับ" @click.stop="back"><van-icon name="arrow-left" size="20"></van-icon></button>
+        <button v-if="!self" class="rb" style="right: 12px" aria-label="ตัวเลือกเพิ่มเติม" @click.stop="route.menu = 'main'"><van-icon name="ellipsis" size="20"></van-icon></button>
+      </div>
+      <div style="padding: 18px 18px 100px; background: #fff; flex: 1">
+        <div style="display: flex; align-items: center; gap: 8px"><span style="font-size: 26px; font-weight: 800">{{ p.name }}</span><span v-if="p.online" aria-label="ออนไลน์" style="width: 10px; height: 10px; border-radius: 5px; background: #2FB86A"></span></div>
+        <div v-if="p.city" style="display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 15px; color: var(--kd-mute)"><van-icon name="location-o"></van-icon>{{ p.city }}</div>
+        <template v-if="p.bio"><div style="font-size: 13px; font-weight: 800; color: var(--kd-mute); margin: 18px 0 6px">เกี่ยวกับฉัน</div><div style="font-size: 15px; line-height: 1.6; white-space: pre-wrap">{{ p.bio }}</div></template>
+      </div>
+    </main>
+    <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 16px 18px; background: linear-gradient(180deg, rgba(255,255,255,0), #fff 40%)">
+      <van-button v-if="self" type="primary" round block url="/profile">แก้ไขโปรไฟล์</van-button>
+      <van-button v-else type="primary" round block icon="chat-o" @click="go('/chat?with=m_' + encodeURIComponent(id))">ทักแชต</van-button>
+    </div>
+    <van-action-sheet :show="route.menu === 'main'" :actions="[{ name: 'รายงานโปรไฟล์นี้', key: 'report' }, { name: 'บล็อก', key: 'block', color: '#C92A2A' }]" cancel-text="ยกเลิก" @select="onMenu" @update:show="v => { if (!v) closeMenu() }"></van-action-sheet>
+    <van-action-sheet :show="route.menu === 'report'" title="รายงานเพราะอะไร" description="อีกฝ่ายจะไม่รู้ว่าคุณเป็นคนรายงาน" :actions="reasons" cancel-text="ยกเลิก" @select="report" @update:show="v => { if (!v) closeMenu() }"></van-action-sheet>
+  </template>
+</div>
+<script>
+K.page({ route: { menu: { def: '', push: true } }, setup({ route }) {
+  const { ref, computed } = Vue;
+  const id = new URLSearchParams(location.search).get('id') || '';
+  const p = ref(null), self = ref(false), loading = ref(true), pi = ref(0);
+  K.onLoad(async () => { try { const d = await api('/api/profiles/' + encodeURIComponent(id)); p.value = d.profile; self.value = d.self; } catch (e) { p.value = null; } loading.value = false; });
+  const photos = computed(() => (p.value && p.value.photos) || []);
+  const back = () => { if (history.length > 1) history.back(); else location.replace('/'); };
+  const closeMenu = () => K.back(() => { route.menu = ''; });
+  const needSafety = (e) => K.fail(e.status === 404 ? 'ยังไม่ได้ติดตั้งระบบบล็อก/รายงาน (kasion add safety)' : e.message);
+  return { id, p, self, loading, pi, photos, back, closeMenu,
+    flip: (e) => { if (photos.value.length < 2) return; const r = e.currentTarget.getBoundingClientRect(); pi.value = e.clientX - r.left > r.width / 2 ? (pi.value + 1) % photos.value.length : (pi.value - 1 + photos.value.length) % photos.value.length; },
+    reasons: ['โปรไฟล์ปลอมหรือแอบอ้าง', 'รูปหรือข้อความไม่เหมาะสม', 'คุกคามหรือพูดจาไม่ดี', 'หลอกลวง / ขายของ'].map(name => ({ name })),
+    onMenu: async (a) => {
+      if (a.key === 'report') { history.replaceState(history.state, '', location.pathname + '?id=' + encodeURIComponent(id) + '&menu=report'); route.menu = 'report'; return; }
+      closeMenu();
+      if (!(await K.confirm('บล็อก ' + p.value.name + '?\nคุณทั้งสองจะไม่เห็นกันอีก'))) return;
+      try { await api('/api/block', { method: 'POST', body: { target: id } }); K.ok('บล็อกแล้ว'); setTimeout(() => location.replace('/'), 700); } catch (e) { needSafety(e); }
+    },
+    report: async (a) => { closeMenu(); try { await api('/api/report', { method: 'POST', body: { target: id, reason: a.name } }); K.ok('ส่งรายงานแล้ว'); } catch (e) { needSafety(e); } } };
+} });
+</script>
+</body>
+</html>

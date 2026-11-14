@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>หน้าใหม่</title>
+<script src="/app.config.js"></script>
+<script src="/kasion.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+input,textarea{font-family:inherit}
+.hs::-webkit-scrollbar{display:none}
+@keyframes kdspin{to{rotate:360deg}}
+.sp{width:28px;height:28px;border-radius:14px;border:3px solid var(--kd-accent-soft);border-top-color:var(--kd-accent);animation:kdspin .8s linear infinite}
+
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: var(--kd-bg); font-family: 'Noto Sans Thai', sans-serif; color: var(--kd-ink); display: flex; flex-direction: column; overflow: hidden; position: relative">
+<div style="display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: #fff; border-bottom: 1px solid var(--kd-line)">
+<button onClick="{{back}}" aria-label="ย้อนกลับ" class="kd-press" style="width: 40px; height: 40px; border-radius: 20px; border: 0; background: var(--kd-bg); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+<div style="font-size: 19px; font-weight: 800; flex: 1">{{title}}</div>
+</div>
+<div style="flex: 1; overflow-y: auto; padding: 14px">
+<sc-if value="{{loading}}"><div style="display: flex; justify-content: center; padding: 40px 0"><div class="sp" role="status" aria-label="กำลังโหลด"></div></div></sc-if>
+<sc-if value="{{ready}}"><div class="kd-card" style="padding: 16px">เริ่มเขียนหน้าของคุณที่นี่</div></sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+// Copy this file to public/<name>.html → it is served at /<name>. See docs/runtime.md for the template syntax.
+class Component extends DCLogic {
+constructor(p) { super(p); this.state = { loading: true }; }
+async componentDidMount() { const me = await requireUser(); if (!me) return; this.setState({ loading: false }); }
+renderVals() {
+const s = this.state;
+return { title: 'หน้าใหม่', loading: s.loading, ready: !s.loading, back: () => { if (history.length > 1) history.back(); else location.replace('/'); } };
+}
+}
+</script>
+</body>
+</html>

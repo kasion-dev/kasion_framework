@@ -1,0 +1,6 @@
+{
+  "title": "ลิงก์ชวนเพื่อน",
+  "use": "app.use(invites());",
+  "notes": "POST /api/me returns { invite, invited }. Share location.origin + \"/?ref=\" + me.invite.",
+  "name": "invites"
+}

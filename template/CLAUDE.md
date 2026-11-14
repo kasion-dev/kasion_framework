@@ -13,9 +13,10 @@ Built with kasion_framework (see `src/core/VERSION`). Live at https://__DOMAIN__
 ## Layout
 
 - `src/worker.js` — this app's routes. `src/core/` — framework modules; do not edit here (fix in kasion_framework, then copy).
-- `migrations/` — `0001_core.sql` is the framework's; add `0003_*.sql` and up, never edit applied files.
+- `migrations/` — `0001_core.sql` is the framework's; add the next free number, never edit applied files.
+- `src/features/` — optional modules installed with `npm run kasion -- add <feature>` (`npm run kasion -- list`; installed ones are in `.kasion.json`). Check there before writing profiles, blocks, a feed, rooms, admin or a wallet by hand.
 - `public/app.config.js` — name, colours, tabs, feature switches. `public/kasion.js` — framework runtime (do not edit).
-- `public/*.html` — screens. Copy `_blank.html` to start one. The `notes` feature (`index.html`, `/api/notes`,
+- `public/*.html` — screens, written with Vue 3 + Vant 4 (no build; `../kasion_framework/docs/vue.md`). Copy `blank.html` to start one. The `notes` feature (`index.html`, `/api/notes`,
   `0002_app.sql`) is a demo of the patterns: replace it.
 
 ## Conventions
@@ -23,7 +24,7 @@ Built with kasion_framework (see `src/core/VERSION`). Live at https://__DOMAIN__
 - Server decides money, permissions and status changes; the client only asks.
 - Thai error messages in `HttpError` (they are shown to users). Times in ms, money in integer satang.
 - Nothing returned to other users may contain email or other private fields.
-- Guides: `../kasion_framework/docs/` (server.md, runtime.md, recipes.md, gotchas.md).
+- Guides: `../kasion_framework/docs/` (vue.md, features.md, server.md, recipes.md, gotchas.md; runtime.md for the older DC pages).
 
 ## Still to do by the owner (once)
 

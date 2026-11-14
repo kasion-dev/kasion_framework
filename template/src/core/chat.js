@@ -5,14 +5,14 @@
 //   read ✓✓ (green) → the recipient opened the thread
 // Options:
 //   canMessage(c, peerUid)  throw HttpError to refuse (default: peer must exist and not be suspended)
-//   profileOf(c, uid)       → { name, photo } shown in lists / notifications (default: users table)
-//   hidden(c)               → array of uids whose messages must not count or show (blocks). Default: none.
+//   profileOf(c, uid)       → { name, photo } shown in lists / notifications (default: the shared 'profileOf' service, else users)
+//   hidden(c)               → array of uids whose messages must not count or show (default: the shared 'hidden' service = blocks)
 //   onMessage(c, { thread, peer, message })  hook after a message is saved
 import { HttpError, pair, str } from './http.js';
 
 export const chat = (opts = {}) => (app) => {
-  const profileOf = opts.profileOf || (async (c, uid) => { const u = await c.db.prepare('SELECT name, photo FROM users WHERE uid = ?').bind(uid).first(); return u || { name: 'ผู้ใช้', photo: null }; });
-  const hiddenOf = async (c) => new Set(opts.hidden ? await opts.hidden(c) : []);
+  const profileOf = opts.profileOf || ((c, uid) => c.profileOf(uid));
+  const hiddenOf = async (c) => new Set(opts.hidden ? await opts.hidden(c) : await c.hidden());
   const MINE = "(m.thread LIKE 'm:' || ?1 || ':%' OR m.thread LIKE 'm:%:' || ?1)";
   const peerOfThread = (t, me) => { const [, a, b] = t.split(':'); return a === me ? b : a; };
 
@@ -20,6 +20,7 @@ export const chat = (opts = {}) => (app) => {
     if (!raw.startsWith('m:')) throw new HttpError(400, 'invalid thread');
     const peer = raw.slice(2);
     if (!peer || peer === c.me || peer.includes(':')) throw new HttpError(400, 'invalid thread');
+    if ((await c.hidden()).includes(peer)) throw new HttpError(403, 'ไม่สามารถส่งข้อความถึงผู้ใช้นี้ได้');
     if (opts.canMessage) await opts.canMessage(c, peer);
     else { const u = await c.db.prepare('SELECT blocked FROM users WHERE uid = ?').bind(peer).first(); if (!u || u.blocked) throw new HttpError(404, 'ไม่พบผู้ใช้นี้'); }
     const [a, b] = pair(c.me, peer);

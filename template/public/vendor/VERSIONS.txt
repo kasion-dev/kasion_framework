@@ -1,0 +1,3 @@
+vue 3.5.45 (dist/vue.global.prod.js, MIT)
+vant 4.10.2 (lib/vant.min.js + lib/index.css, MIT)
+Vendored so apps do not depend on a CDN at runtime. Update: npm install vue@3 vant@4, copy the same files, run npm test.

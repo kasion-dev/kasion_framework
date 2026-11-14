@@ -34,6 +34,9 @@
     // --kd-navh = height of a fixed bottom tab bar (measured at runtime) so content can scroll clear of it
     '.dc-host>div{padding-bottom:var(--kd-navh,0px)!important;box-sizing:border-box}' +
     '@media (min-width:500px) and (min-height:860px){.dc-host{border-radius:28px;overflow:hidden}}' +
+    // Vue pages: <div id="app" class="k-app"> gets the same phone frame
+    '.k-app{width:390px;max-width:100%;height:min(844px,calc(100dvh - env(safe-area-inset-top)));background:var(--kd-bg);box-shadow:0 10px 40px rgba(0,0,0,.12);display:flex;flex-direction:column;overflow:hidden;position:relative;font-family:"Noto Sans Thai",sans-serif;color:var(--kd-ink)}' +
+    '@media (min-width:500px) and (min-height:860px){.k-app{border-radius:28px}}@media (max-width:499px){.k-app{width:100vw;height:100dvh;box-shadow:none}}[v-cloak]{display:none}' +
     '@media (max-width:499px){.dc-host{width:100vw;height:100dvh;box-shadow:none}.dc-host>div{width:100%!important}' +
     '.dc-host>div>:last-child:not([style*="overflow-y: auto"]){padding-bottom:env(safe-area-inset-bottom)}}</style>');
   const keepFocusVisible = () => { const el = document.activeElement; if (el && /^(INPUT|TEXTAREA)$/.test(el.tagName)) setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 120); };
@@ -721,6 +724,7 @@
   }
   document.addEventListener('DOMContentLoaded', () => {
     const tpl = document.querySelector('x-dc');
+    if (!tpl) return; // a Vue page (kasion.vue.js): no DC template to render
     const helmet = tpl.querySelector('helmet');
     if (helmet) Array.from(helmet.children).forEach(c => document.head.appendChild(c.cloneNode(true)));
     const sc = document.querySelector('script[data-dc-script]');

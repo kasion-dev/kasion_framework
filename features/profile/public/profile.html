@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>โปรไฟล์</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/vendor/vant.css">
+<script src="/app.config.js"></script>
+<script src="/kasion.js"></script>
+<script src="/vendor/vue.js"></script>
+<script src="/vendor/vant.js"></script>
+<script src="/kasion.vue.js"></script>
+<style>
+.ph{position:relative;aspect-ratio:3/4;border-radius:14px;overflow:hidden;background:var(--kd-accent-soft);border:1.5px dashed var(--kd-accent);display:flex;align-items:center;justify-content:center;color:var(--kd-accent-ink);font-size:12px;font-weight:700}
+.ph.has{border:0}.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.lab{font-size:13px;font-weight:800;color:var(--kd-mute);margin:16px 4px 8px}
+</style>
+</head>
+<body>
+<div id="app" class="k-app" v-cloak>
+  <k-page :title="setup ? 'สร้างโปรไฟล์' : 'โปรไฟล์ของฉัน'" :tab="setup ? '' : 'profile'">
+    <template #right><a v-if="!setup" :href="'/user?id=' + encodeURIComponent(user.uid)" style="font-size: 13px; font-weight: 700; color: var(--kd-accent)">ดูตัวอย่าง</a></template>
+    <div class="k-pad">
+      <div class="lab" style="margin-top: 4px">รูปของคุณ · รูปแรกคือรูปหลัก</div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+        <div v-for="i in 6" :key="i" class="ph" :class="{ has: f.photos[i - 1] }">
+          <template v-if="f.photos[i - 1]"><img :src="f.photos[i - 1]" :alt="'รูปที่ ' + i" data-preview="1"><van-icon name="clear" size="22" style="position: absolute; top: 4px; right: 4px; color: #000; opacity: .7; z-index: 1" role="button" :aria-label="'ลบรูปที่ ' + i" @click="removePhoto(i - 1)"></van-icon><van-tag v-if="i === 1" type="primary" round style="position: absolute; left: 6px; bottom: 6px; z-index: 1">รูปหลัก</van-tag><van-tag v-else round color="rgba(0,0,0,.6)" style="position: absolute; left: 6px; bottom: 6px; z-index: 1" role="button" @click="makeMain(i - 1)">ตั้งเป็นรูปหลัก</van-tag></template>
+          <div v-else-if="i === f.photos.length + 1" role="button" tabindex="0" aria-label="เพิ่มรูป" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px" @click="addPhoto" @keydown.enter="addPhoto"><van-loading v-if="uploading" size="22"></van-loading><template v-else><van-icon name="plus" size="24"></van-icon>เพิ่มรูป</template></div>
+        </div>
+      </div>
+      <div class="lab">ข้อมูลของคุณ</div>
+      <van-cell-group inset style="margin: 0">
+        <van-field v-model="f.name" label="ชื่อที่แสดง" maxlength="40" placeholder="ชื่อเล่นหรือชื่อที่อยากให้เรียก" autocomplete="nickname"></van-field>
+        <van-field v-model="f.city" label="จังหวัด" maxlength="60" placeholder="เช่น กรุงเทพฯ" autocomplete="address-level1"></van-field>
+        <van-field v-model="f.bio" label="แนะนำตัว" type="textarea" rows="3" autosize maxlength="300" show-word-limit placeholder="เล่าสั้น ๆ ว่าคุณเป็นคนแบบไหน"></van-field>
+      </van-cell-group>
+      <van-button type="primary" round block :loading="saving" style="margin-top: 18px" @click="save">{{ setup ? 'เริ่มใช้งาน' : 'บันทึกโปรไฟล์' }}</van-button>
+      <van-button v-if="setup" round block plain style="margin-top: 10px; border: 0; color: var(--kd-mute)" @click="signOut">ใช้บัญชี Google อื่น · ออกจากระบบ</van-button>
+    </div>
+  </k-page>
+</div>
+<script>
+K.page({ setup({ me }) {
+  const { ref, reactive } = Vue;
+  const p = me.profile || {};
+  const f = reactive({ name: p.name || '', city: p.city || '', bio: p.bio || '', photos: (p.photos || []).slice() });
+  const setup = ref(!p.complete), saving = ref(false), uploading = ref(false);
+  const patch = async (body, msg) => { try { await api('/api/profile', { method: 'PUT', body }); if (msg) K.toast(msg); return true; } catch (e) { K.fail(e.message); return false; } };
+  return { f, setup, saving, uploading,
+    addPhoto: async () => { if (uploading.value) return; if (f.photos.length >= 6) return K.toast('ใส่ได้สูงสุด 6 รูป'); uploading.value = true; try { const r = await K.pickImage('profiles'); if (r && r.url) { f.photos.push(r.url); if (!setup.value) await patch({ photos: f.photos }, 'เพิ่มรูปแล้ว'); } } catch (e) { K.fail('อัปโหลดไม่สำเร็จ'); } uploading.value = false; },
+    removePhoto: async (i) => { if (!setup.value && f.photos.length <= 1) return K.toast('ต้องมีอย่างน้อย 1 รูป · เพิ่มรูปใหม่ก่อนลบรูปนี้'); f.photos.splice(i, 1); if (!setup.value) await patch({ photos: f.photos }); },
+    makeMain: async (i) => { f.photos.unshift(f.photos.splice(i, 1)[0]); if (!setup.value) await patch({ photos: f.photos }, 'ตั้งเป็นรูปหลักแล้ว'); },
+    save: async () => {
+      if (!f.name.trim()) return K.toast('กรอกชื่อที่แสดง');
+      if (!f.photos.length) return K.toast('เพิ่มรูปอย่างน้อย 1 รูป');
+      saving.value = true;
+      const ok = await patch({ name: f.name.trim(), city: f.city, bio: f.bio, photos: f.photos });
+      saving.value = false;
+      if (!ok) return;
+      sfx.play('success');
+      if (setup.value) { K.ok('พร้อมแล้ว'); setTimeout(() => location.replace('/'), 600); } else K.toast('บันทึกโปรไฟล์แล้ว');
+    },
+    signOut: async () => { try { await auth.signOut(); } catch (e) {} location.replace('/login'); } };
+} });
+</script>
+</body>
+</html>

@@ -3,3 +3,5 @@ node_modules/
 .DS_Store
 .dev.vars
 *.log
+# public/vendor holds the vendored Vue + Vant files: keep it even when a global gitignore ignores vendor/
+!vendor/

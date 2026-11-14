@@ -6,7 +6,7 @@ import { agoraRtcToken } from './agora.js';
 const RING_MS = 45_000;
 
 export const calls = (opts = {}) => (app) => {
-  const profileOf = opts.profileOf || (async (c, uid) => { const u = await c.db.prepare('SELECT name, photo FROM users WHERE uid = ?').bind(uid).first(); return u || { name: 'ผู้ใช้', photo: null }; });
+  const profileOf = opts.profileOf || ((c, uid) => c.profileOf(uid));
   const peer = async (c, uid) => { const p = await profileOf(c, uid); return { uid, name: p.name, photo: p.photo || null }; };
   const get = async (c) => {
     const call = await c.db.prepare('SELECT * FROM calls WHERE id = ?').bind(c.params.id).first();
@@ -18,6 +18,7 @@ export const calls = (opts = {}) => (app) => {
   app.post('/api/calls', async (c) => {
     const { to, video } = await c.body();
     if (!to || typeof to !== 'string' || to === c.me) throw new HttpError(400, 'to required');
+    if ((await c.hidden()).includes(to)) throw new HttpError(403, 'โทรหาผู้ใช้นี้ไม่ได้');
     if (opts.canCall) await opts.canCall(c, to);
     else if (!(await c.db.prepare('SELECT 1 FROM users WHERE uid = ? AND blocked = 0').bind(to).first())) throw new HttpError(404, 'ไม่พบผู้ใช้นี้');
     await c.rate('SELECT COUNT(*) n FROM calls WHERE caller = ? AND created_at > ?', 60_000, 6);

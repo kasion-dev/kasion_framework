@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>ห้องแชต</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/vendor/vant.css">
+<script src="/app.config.js"></script>
+<script src="/kasion.js"></script>
+<script src="/vendor/vue.js"></script>
+<script src="/vendor/vant.js"></script>
+<script src="/kasion.vue.js"></script>
+<style>
+.row{display:flex;gap:8px;margin-top:3px}.row.first{margin-top:12px}.row.me{justify-content:flex-end}
+.bub{max-width:74%;padding:9px 13px;border-radius:18px;font-size:15px;line-height:1.45;word-break:break-word;white-space:pre-wrap;background:#fff;border:1px solid var(--kd-line)}
+.me .bub{background:var(--kd-accent);color:#fff;border:0}
+</style>
+</head>
+<body>
+<div id="app" class="k-app" v-cloak>
+  <k-page :title="room.name || 'ห้องแชต'" back="/rooms" :loading="loading">
+    <template #right><span style="font-size: 12px; font-weight: 700" :style="{ color: live.connected.value ? '#1E8E4E' : '#8A948F' }">{{ live.connected.value ? live.count.value + ' คนในห้อง' : 'กำลังเชื่อมต่อ…' }}</span></template>
+    <div class="k-pad" ref="list" aria-live="polite">
+      <k-empty v-if="!msgs.length" :title="room.about" text="ยังไม่มีข้อความ เริ่มทักทายได้เลย"></k-empty>
+      <div v-for="(m, i) in msgs" :key="m.id" class="row" :class="{ me: m.mine, first: first(i), 'k-new': m.id === newId }">
+        <template v-if="!m.mine"><a v-if="last(i)" :href="'/user?id=' + encodeURIComponent(m.author.uid)" style="align-self: flex-end"><k-avatar :src="m.author.photo" :name="m.author.name" :size="32"></k-avatar></a><span v-else style="width: 32px; flex-shrink: 0"></span></template>
+        <div style="display: flex; flex-direction: column" :style="{ alignItems: m.mine ? 'flex-end' : 'flex-start', maxWidth: '76%' }">
+          <span v-if="!m.mine && first(i)" style="font-size: 12px; font-weight: 800; color: var(--kd-mute); margin: 0 6px 3px">{{ m.author.name }}</span>
+          <div class="bub" style="max-width: 100%" :style="m.img && !m.text ? 'padding: 4px' : ''"><img v-if="m.img" :src="m.img" alt="รูปภาพ" data-preview="1" style="display: block; max-width: 210px; width: 100%; border-radius: 14px; cursor: zoom-in"><template v-if="m.text">{{ m.text }}</template></div>
+          <span v-if="last(i)" style="font-size: 11px; color: #8A948F; margin: 3px 6px 0">{{ hhmm(m.at) }}</span>
+        </div>
+      </div>
+    </div>
+    <template #footer>
+      <div style="display: flex; gap: 8px; align-items: center; padding: 8px 10px 12px; background: #fff; border-top: 1px solid var(--kd-line)">
+        <van-icon name="photo-o" size="26" color="var(--kd-accent)" role="button" tabindex="0" aria-label="แนบรูปภาพ" @click="attach"></van-icon>
+        <van-field v-model="draft" maxlength="500" placeholder="พิมพ์ข้อความถึงทุกคนในห้อง…" aria-label="ข้อความ" enterkeyhint="send" @keydown.enter.prevent="send()" style="flex: 1; background: var(--kd-bg); border-radius: 22px; padding: 8px 14px"></van-field>
+        <van-button type="primary" round icon="guide-o" aria-label="ส่ง" :loading="sending" @click="send()"></van-button>
+      </div>
+    </template>
+  </k-page>
+</div>
+<script>
+K.page({ setup({ user }) {
+  const { ref, nextTick } = Vue;
+  const id = new URLSearchParams(location.search).get('id') || 'lobby';
+  const room = ref({}), msgs = ref([]), loading = ref(true), draft = ref(''), sending = ref(false), newId = ref(''), list = ref(null);
+  const bottom = () => nextTick(() => { const sc = list.value && list.value.parentElement; if (sc) sc.scrollTop = sc.scrollHeight; });
+  const load = K.onLoad(async () => {
+    try { const d = await api('/api/rooms/' + encodeURIComponent(id) + '/messages'); room.value = d.room; msgs.value = d.messages; bottom(); }
+    catch (e) { K.fail(e.message); }
+    loading.value = false;
+  });
+  const live = K.live('room:' + id, {
+    room_msg(ev) { if (ev.by === user.uid || msgs.value.some(x => x.id === ev.message.id)) return; const sc = list.value && list.value.parentElement, near = !sc || sc.scrollHeight - sc.scrollTop - sc.clientHeight < 140; newId.value = ev.message.id; msgs.value.push(ev.message); sfx.play('receive', .5); if (near) bottom(); },
+    room_deleted(ev) { msgs.value = msgs.value.filter(x => x.id !== ev.id); },
+  }, load);
+  const send = async (extra) => {
+    const text = extra ? '' : draft.value.trim();
+    if ((!extra && !text) || sending.value) return;
+    sending.value = true;
+    try { const d = await api('/api/rooms/' + encodeURIComponent(id) + '/messages', { method: 'POST', body: extra || { text } }); if (!extra && draft.value.trim() === text) draft.value = ''; newId.value = d.message.id; msgs.value.push(d.message); sfx.play('send', .7); bottom(); }
+    catch (e) { K.fail(e.message); }
+    sending.value = false;
+  };
+  const same = (a, b) => a && b && a.author.uid === b.author.uid && Math.abs(a.at - b.at) < 300000;
+  return { room, msgs, loading, draft, sending, newId, list, live, send,
+    attach: async () => { const r = await K.pickImage('uploads'); if (r && r.url) send({ img: r.url }); },
+    first: (i) => !same(msgs.value[i - 1], msgs.value[i]), last: (i) => !same(msgs.value[i], msgs.value[i + 1]),
+    hhmm: (ts) => new Date(ts).toTimeString().slice(0, 5) };
+} });
+</script>
+</body>
+</html>

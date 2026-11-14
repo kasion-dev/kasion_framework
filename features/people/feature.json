@@ -1,0 +1,12 @@
+{
+  "title": "รายชื่อคนออนไลน์ + ใกล้ฉัน",
+  "use": "app.use(people());",
+  "tab": [
+    "people",
+    "ออนไลน์",
+    "/people",
+    "M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20a6.5 6.5 0 0 1 13 0M17 4.5a3.5 3.5 0 0 1 0 6.5M18 14.5a6 6 0 0 1 3.5 5.5"
+  ],
+  "notes": "Distance is coarse and optional.",
+  "name": "people"
+}
