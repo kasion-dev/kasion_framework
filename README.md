@@ -67,3 +67,7 @@ npm test    # สร้างแอปทดสอบในโฟลเดอร
 
 แก้ `template/src/core/` หรือ `template/public/kasion.js` แล้วต้องรัน `npm test` ทุกครั้ง
 แอปที่สร้างไปแล้วอัปเดต core ได้โดยคัดลอก `template/src/core/` และ `template/public/kasion.js` ไปทับ (ดูเลขรุ่นใน `src/core/VERSION`)
+
+## License
+
+MIT — ดู [LICENSE](LICENSE). ไฟล์ใน `template/public/vendor/` (Vue, Vant) และ `features/*/public/` ที่มาจากไลบรารีอื่น (Leaflet loader, qrcode) เป็นลิขสิทธิ์ของเจ้าของเดิมตาม license ของแต่ละตัว

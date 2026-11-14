@@ -10,5 +10,6 @@
   "scripts": {
     "create": "node bin/create.mjs",
     "test": "node scripts/smoke.mjs"
-  }
+  },
+  "license": "MIT"
 }
