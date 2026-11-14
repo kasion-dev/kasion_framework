@@ -7,7 +7,8 @@ Built with kasion_framework (see `src/core/VERSION`). Live at https://__DOMAIN__
 - `export PATH="$HOME/.nvm/versions/node/v22.23.1/bin:$PATH"` before any wrangler/npm command (needs Node 22).
 - `npm run dev` → http://localhost:8787/?as=alice (fake sign-in, local only; `?as=bob` in a second tab for the other side).
 - `npm run check` before every deploy; `npm run deploy` runs it for you. `npm run migrate` applies new migrations to production.
-- Confirm before `git commit`. Reply in Thai; code and comments in English.
+- Confirm before `git commit`. Commit messages never mention Claude (no `Co-Authored-By`, no "Generated with" line).
+- Reply in Thai; code and comments in English.
 
 ## Layout
 

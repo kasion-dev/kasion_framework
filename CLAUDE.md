@@ -17,6 +17,7 @@ needs), start here instead of writing infrastructure again.
 ## Rules that come from real incidents
 
 - **No auto-commit.** Confirm before every commit. Deploys during a requested task are fine.
+- **No Claude attribution in git.** Commit messages and PR descriptions never mention Claude: no `Co-Authored-By` trailer, no "Generated with" line.
 - **Never edit an applied migration.** Add a new numbered file.
 - **Never put secrets or TEST_AUTH in `wrangler.jsonc`.** Secrets go through `wrangler secret put`; `TEST_AUTH=1` lives only in `.dev.vars`.
 - **Reply in Thai**; code, comments and identifiers in English.
