@@ -21,6 +21,7 @@
 
 **Client**
 - `<sc-for>` inside `<table>`/`<select>` is dropped by the HTML parser.
+- `<img src="{{x}}">` in a template fires a 404 for the literal text; write `sc-src="{{x}}"`. (`background-image: url('{{x}}')` in a style is fine.)
 - `location.href = …` after finishing a flow leaves the old screen in history; use `history.back()` or `location.replace()`.
 - Pages restored from the back/forward cache replay old banners unless you clear them on `pagehide` (kasion.js does).
 - `auth.ready()`, `getIdToken()` and `fetch` can hang: kasion.js adds timeouts so buttons never spin forever. Always reset a

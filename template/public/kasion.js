@@ -714,6 +714,8 @@
         else el.setAttribute(a.name, String(v));
       } else el.setAttribute(a.name, interp(a.value, scope));
     }
+    // sc-src="{{url}}" → src, so the browser never requests the raw "{{url}}" while it scans the template.
+    if (el.hasAttribute('sc-src')) { const v = el.getAttribute('sc-src'); el.removeAttribute('sc-src'); if (v) el.setAttribute('src', v); }
     node.childNodes.forEach(c => render(c, scope, el));
     out.appendChild(el);
   }

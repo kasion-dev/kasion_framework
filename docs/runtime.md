@@ -28,6 +28,7 @@ Give the scrolling area `flex: 1; overflow-y: auto`; headers and tab bars stay f
 | `<sc-if value="{{flag}}">…</sc-if>` | render when truthy. There is no else: return both `ready` and `notReady`. |
 | `<sc-for list="{{items}}" as="it">…</sc-for>` | repeat. Put handlers on each item object: `{ label, pick: () => … }`. |
 | `onClick="{{fn}}"`, `onInput`, `onKeydown`, `onPointerdown` … | event handlers; the value must be a function from `renderVals()`. |
+| `<img sc-src="{{url}}">` | use `sc-src` for dynamic image URLs — a plain `src="{{url}}"` makes the browser request the literal `{{url}}` (a 404) before the runtime runs. |
 | `aria-pressed="{{on}}"`, `disabled="{{busy}}"` | pass strings `'true'`/`'false'` for ARIA; booleans for boolean attributes. |
 
 Rules that bite:

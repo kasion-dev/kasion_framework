@@ -82,7 +82,7 @@ button:disabled{cursor:default}
 </sc-if>
 <sc-if value="{{signedIn}}">
 <div class="kd-in" style="display: flex; align-items: center; gap: 12px">
-<sc-if value="{{user.hasPhoto}}"><img src="{{user.photo}}" alt="" width="56" height="56" referrerpolicy="no-referrer" style="width: 56px; height: 56px; border-radius: 28px; object-fit: cover; flex-shrink: 0; border: 2px solid var(--kd-accent-soft)"></sc-if>
+<sc-if value="{{user.hasPhoto}}"><img sc-src="{{user.photo}}" alt="" width="56" height="56" referrerpolicy="no-referrer" style="width: 56px; height: 56px; border-radius: 28px; object-fit: cover; flex-shrink: 0; border: 2px solid var(--kd-accent-soft)"></sc-if>
 <sc-if value="{{user.noPhoto}}"><span style="width: 56px; height: 56px; border-radius: 28px; background: var(--kd-accent-soft); color: var(--kd-accent-ink); font-weight: 800; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0">{{user.initials}}</span></sc-if>
 <div style="min-width: 0; flex: 1"><div style="font-size: 12px; color: var(--kd-mute)">เข้าสู่ระบบแล้วในชื่อ</div><div style="font-weight: 800; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{user.name}}</div><div style="font-size: 13px; color: var(--kd-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{user.email}}</div></div>
 </div>

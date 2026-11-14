@@ -39,7 +39,7 @@ input{font-family:inherit}
 <div class="ch-row" style="display: flex; align-items: center; border-bottom: {{c.border}}">
 <button onClick="{{c.open}}" class="kd-press" style="flex: 1; min-width: 0; display: flex; gap: 12px; align-items: center; padding: 12px 14px; border: 0; background: none; text-align: left; color: var(--kd-ink)">
 <span style="position: relative; flex-shrink: 0">
-<sc-if value="{{c.hasPhoto}}"><img src="{{c.photo}}" alt="" width="48" height="48" referrerpolicy="no-referrer" style="display: block; width: 48px; height: 48px; border-radius: 24px; object-fit: cover"></sc-if>
+<sc-if value="{{c.hasPhoto}}"><img sc-src="{{c.photo}}" alt="" width="48" height="48" referrerpolicy="no-referrer" style="display: block; width: 48px; height: 48px; border-radius: 24px; object-fit: cover"></sc-if>
 <sc-if value="{{c.noPhoto}}"><span style="width: 48px; height: 48px; border-radius: 24px; background: var(--kd-accent-soft); color: var(--kd-accent-ink); font-weight: 800; display: flex; align-items: center; justify-content: center">{{c.initials}}</span></sc-if>
 <sc-if value="{{c.online}}"><span class="kd-pulse" style="position: absolute; right: 0; bottom: 0; width: 12px; height: 12px; border-radius: 6px; border: 2px solid #fff; background: var(--kd-accent)"></span></sc-if>
 </span>
@@ -67,7 +67,7 @@ input{font-family:inherit}
 <div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #fff; border-bottom: 1px solid var(--kd-line)">
 <button onClick="{{closeThread}}" aria-label="กลับไปรายการแชท" class="kd-press" style="width: 40px; height: 40px; border-radius: 20px; border: 0; background: var(--kd-bg); color: var(--kd-ink); display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
 <span style="position: relative; flex-shrink: 0">
-<sc-if value="{{cur.hasPhoto}}"><img src="{{cur.photo}}" alt="" width="40" height="40" referrerpolicy="no-referrer" style="display: block; width: 40px; height: 40px; border-radius: 20px; object-fit: cover"></sc-if>
+<sc-if value="{{cur.hasPhoto}}"><img sc-src="{{cur.photo}}" alt="" width="40" height="40" referrerpolicy="no-referrer" style="display: block; width: 40px; height: 40px; border-radius: 20px; object-fit: cover"></sc-if>
 <sc-if value="{{cur.isFriendNoPhoto}}"><span style="width: 40px; height: 40px; border-radius: 20px; background: var(--kd-accent-soft); color: var(--kd-accent-ink); font-weight: 800; font-size: 14px; display: flex; align-items: center; justify-content: center">{{cur.initials}}</span></sc-if>
 <sc-if value="{{cur.isDemo}}"><span style="width: 40px; height: 40px; border-radius: 20px; background: {{cur.bg}}; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{cur.fg}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{cur.icon}}"/></svg></span></sc-if>
 <sc-if value="{{cur.online}}"><span class="kd-pulse" style="position: absolute; right: 0; bottom: 0; width: 11px; height: 11px; border-radius: 6px; border: 2px solid #fff; background: var(--kd-accent)"></span></sc-if>
@@ -84,7 +84,7 @@ input{font-family:inherit}
 <sc-if value="{{dayLabel}}"><div style="align-self: center; font-size: 12px; color: var(--kd-mute); background: #E9ECEA; border-radius: 10px; padding: 2px 10px; margin-bottom: 10px">{{dayLabel}}</div></sc-if>
 <sc-for list="{{msgs}}" as="m">
 <div class="{{m.anim}}" style="display: flex; flex-direction: column; align-items: {{m.align}}; margin-top: {{m.gap}}">
-<div style="max-width: 75%; padding: {{m.pad}}; border-radius: {{m.radius}}; background: {{m.bg}}; color: {{m.fg}}; border: {{m.border}}; font-size: 14px; line-height: 1.45; word-break: break-word"><sc-if value="{{m.isImg}}"><img src="{{m.img}}" alt="รูปภาพ" data-preview="1" style="cursor: zoom-in; display: block; max-width: 220px; width: 100%; border-radius: 12px"></sc-if><sc-if value="{{m.isText}}">{{m.text}}</sc-if></div>
+<div style="max-width: 75%; padding: {{m.pad}}; border-radius: {{m.radius}}; background: {{m.bg}}; color: {{m.fg}}; border: {{m.border}}; font-size: 14px; line-height: 1.45; word-break: break-word"><sc-if value="{{m.isImg}}"><img sc-src="{{m.img}}" alt="รูปภาพ" data-preview="1" style="cursor: zoom-in; display: block; max-width: 220px; width: 100%; border-radius: 12px"></sc-if><sc-if value="{{m.isText}}">{{m.text}}</sc-if></div>
 <sc-if value="{{m.showMeta}}"><div style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: #8A948F; margin: 3px 4px 0">{{m.time}}<sc-if value="{{m.single}}"><svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="#8A948F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="{{m.tickLabel}}"><path d="M2 6.5l3 3 7-7.5"/></svg></sc-if><sc-if value="{{m.double}}"><svg width="19" height="12" viewBox="0 0 19 12" fill="none" stroke="{{m.tickColor}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="{{m.tickLabel}}"><path d="M1.5 6.5l3 3 7-7.5"/><path d="M8 9.5l.5.3 7.5-8"/></svg></sc-if></div></sc-if>
 </div>
 </sc-for>
